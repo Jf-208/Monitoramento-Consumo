@@ -4,7 +4,8 @@
 
 // Se estiver rodando no Web ou no iOS Simulator, localhost funciona.
 // Se estiver usando o emulador do Android, o localhost da máquina é acessado através de 10.0.2.2
-const BASE_URL = 'https://monitoramento-consumo-production.up.railway.app';
+const BASE_URL = 'http://localhost:8000';
+// const BASE_URL = 'https://monitoramento-consumo-production.up.railway.app';
 
 const api = {
   // Função GET: Pega informações do backend (ex: buscar lista de consumos)

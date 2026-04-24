@@ -7,6 +7,11 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from dotenv import load_dotenv
+
+# Garante que vai achar o .env dentro da pasta Backend_Api, não importa de onde o uvicorn for rodado
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 def enviar_codigo_reset(email_destino: str, codigo: str) -> bool:
     """
@@ -25,6 +30,18 @@ def enviar_codigo_reset(email_destino: str, codigo: str) -> bool:
     msg["Subject"] = f"🔐 Wavunder - Código de Recuperação: {codigo}"
     msg["From"] = f"Wavunder App <{remetente}>"
     msg["To"] = email_destino
+
+    texto = f"""
+    🔐 Wavunder - Recuperação de Senha
+    
+    Olá! Recebemos uma solicitação para redefinir sua senha.
+    Use o código abaixo:
+    
+    {codigo}
+    
+    ⏰ Este código expira em 10 minutos.
+    Se você não solicitou essa redefinição, ignore este e-mail.
+    """
 
     html = f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #0B1A3B; border-radius: 16px; padding: 32px; color: #fff;">
@@ -46,7 +63,12 @@ def enviar_codigo_reset(email_destino: str, codigo: str) -> bool:
     </div>
     """
 
-    msg.attach(MIMEText(html, "html"))
+    parte_texto = MIMEText(texto, "plain")
+    parte_html = MIMEText(html, "html")
+
+    # A ordem importa: o HTML deve vir por último num MIMEMultipart alternative
+    msg.attach(parte_texto)
+    msg.attach(parte_html)
 
     try:
         # Conecta ao servidor SMTP do Gmail
