@@ -1,0 +1,3 @@
+# Este diretório armazena os arquivos de migração gerados pelo Alembic.
+# Cada arquivo representa uma versão do schema do banco de dados.
+# Não delete estes arquivos manualmente.
