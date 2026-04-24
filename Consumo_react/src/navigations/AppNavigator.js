@@ -1,3 +1,8 @@
+// AppNavigator.js
+// Componente raiz de navegação (Navegador Stack).
+// Gerencia as rotas baseado no estado de autenticação:
+// - Se não logado: Mostra Login, Cadastro, Recuperar Senha.
+// - Se logado: Mostra as abas principais (MainTabs) e telas internas (Water, Energy, etc).
 import React, { useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';

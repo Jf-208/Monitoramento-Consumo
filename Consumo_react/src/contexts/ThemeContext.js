@@ -1,3 +1,7 @@
+// ThemeContext.js
+// Contexto global de Tema.
+// Permite alternar entre os esquemas de cores 'Claro' e 'Escuro'.
+// Utiliza o AsyncStorage para salvar a preferência do usuário e recarregar na próxima vez que o app abrir.
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { lightColors, darkColors } from '../theme/colors';

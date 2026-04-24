@@ -1,3 +1,6 @@
+// ChangePassword/index.js
+// Tela para Alterar a Senha (com o usuário já logado).
+// Solicita a senha atual e a nova senha, validando os dados antes de enviar a requisição PUT para /auth/alterar-senha.
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';

@@ -1,3 +1,6 @@
+// Help/index.js
+// Tela de Ajuda e Suporte.
+// Pode conter FAQs, contatos ou formulários para ajudar o usuário com dúvidas sobre o aplicativo.
 import React, { useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';

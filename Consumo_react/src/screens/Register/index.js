@@ -1,3 +1,6 @@
+// Register/index.js
+// Tela de Cadastro de novos usuários.
+// Contém o formulário (nome, e-mail, senha) e faz a validação antes de chamar a rota /auth/register da API.
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';

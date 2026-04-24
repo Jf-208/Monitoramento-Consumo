@@ -1,3 +1,7 @@
+// Login/index.js
+// Tela inicial de Autenticação.
+// Permite que usuários existentes entrem na plataforma informando e-mail e senha.
+// Se o login for bem-sucedido, o AuthContext atualiza o estado global e redireciona para o Dashboard.
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';

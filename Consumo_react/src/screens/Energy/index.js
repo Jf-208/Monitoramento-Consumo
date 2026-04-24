@@ -1,3 +1,7 @@
+// Energy/index.js
+// Tela de Dashboard de Energia.
+// Permite ao usuário simular o consumo de energia selecionando aparelhos (TV, Geladeira, etc)
+// ou ajustando a potência e o tempo de uso para calcular kWh e o custo.
 import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import Slider from '@react-native-community/slider';

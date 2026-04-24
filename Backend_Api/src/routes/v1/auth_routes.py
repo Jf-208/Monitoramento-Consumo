@@ -106,7 +106,7 @@ def esqueci_senha(dados: EsqueciSenhaRequest, db: Session = Depends(get_db)):
     enviado = enviar_codigo_reset(dados.email, codigo)
     if not enviado:
         # Mesmo se o e-mail falhar, retorna o código no console para testes
-        print(f"⚠️ Código para {dados.email}: {codigo}")
+        print(f"Código para {dados.email}: {codigo}")
     
     return {"message": "Código enviado para o seu e-mail!"}
 

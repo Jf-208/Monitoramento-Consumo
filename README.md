@@ -1,10 +1,10 @@
-# 📊 Wavunder - Monitoramento Sustentável (Consumo)
+# Wavunder - Monitoramento Sustentável (Consumo)
 
 Bem-vindo à documentação oficial do projeto **Wavunder** (anteriormente "Onda Sob" / Consumo). Este projeto é uma aplicação full-stack voltada para o monitoramento e análise de consumo de energia elétrica e água, visando a conscientização e a sustentabilidade.
 
 ---
 
-## 📝 Visão Geral da Arquitetura
+## Visão Geral da Arquitetura
 
 O projeto foi dividido em duas partes principais, seguindo o padrão de **Clean Architecture** e desacoplamento:
 1. **Frontend**: Aplicativo Mobile desenvolvido em React Native utilizando o Expo.
@@ -13,24 +13,42 @@ O projeto foi dividido em duas partes principais, seguindo o padrão de **Clean 
 
 ---
 
-## 📱 Frontend (React Native / Expo)
+## Frontend (React Native / Expo)
 
-O frontend foi estruturado com base no **Atomic Design**, garantindo a reutilização de código e uma interface escalável. A pasta principal é a `Consumo_react/src/`.
+O frontend foi estruturado com base no **Atomic Design**, garantindo a reutilização de código e uma interface escalável. A lógica e as telas da aplicação ficam concentradas na pasta `Consumo_react/src/`.
 
-### 📂 Principais Arquivos e Motivos:
-* **`src/components/`**: Dividido em `basic` (ex: botões, inputs, chips), `intermediate` (ex: cartões de resumo que juntam básicos) e `layout` (ex: cabeçalhos e menus). **Motivo:** Evitar duplicação de código visual e padronizar o design do app.
-* **`src/screens/`**: Telas completas da aplicação, como `Login`, `Register`, `Dashboard` e `ForgotPassword`. **Motivo:** Separar a lógica de navegação da lógica de componentes visuais.
-* **`src/services/api.js`**: Arquivo responsável pela comunicação com o backend. **Motivo:** Centralizar todas as requisições HTTP (GET, POST, PUT) usando o `fetch` nativo do JavaScript. Isso facilita a troca entre o servidor local (`localhost:8000`) e o servidor de produção no Railway, alterando apenas a variável `BASE_URL`.
-* **`src/contexts/ThemeContext.js`**: Gerenciador de estado global para o tema Claro/Escuro. **Motivo:** Permitir que o aplicativo inteiro saiba instantaneamente qual paleta de cores aplicar sem precisar repassar essa informação de tela em tela (prop drilling).
-* **`src/navigations/`**: Configuração das rotas do app usando React Navigation (Telas de Stack e Abas/Tabs).
+### Principais Pastas e Arquivos:
+
+* **`src/components/` (Interface Visual)**
+  * **`basic/`:** Componentes fundamentais que não podem ser divididos. Exemplos: `Chip.js` (rótulos visuais), botões padronizados e inputs. **Motivo:** Garantir que todos os botões e formulários do app tenham a mesma identidade visual, facilitando a manutenção em um único lugar.
+  * **`intermediate/`:** Junção de componentes básicos. Exemplo: Cartões de consumo que juntam um ícone, um texto e um valor.
+  * **`layout/`:** Estruturas maiores da interface. Exemplo: `FAB.js` (Botão Flutuante) e cabeçalhos.
+
+* **`src/screens/` (Telas da Aplicação)**
+  * **`Login` e `Register`:** Telas de autenticação inicial. Realizam a validação dos campos no celular antes de enviar qualquer requisição pesada para o servidor.
+  * **`ForgotPassword`:** Tela de recuperação em duas etapas (envio de e-mail e validação de PIN), garantindo um fluxo seguro para troca de senha.
+  * **`Water` e `Energy`:** Telas de painel de controle (Dashboard) que exibem o consumo do usuário em tempo real utilizando gráficos dinâmicos.
+  * **`Tips` e `Privacy`:** Telas informativas para a educação do usuário sobre consumo sustentável e políticas do aplicativo.
+
+* **`src/navigations/` (Controle de Rotas)**
+  * **`AppNavigator.js`:** O cérebro da navegação. **Motivo:** Ele separa as rotas públicas (Login/Cadastro) das rotas privadas (Dashboard). Se o usuário não tem um token válido, ele nunca conseguirá acessar as telas de consumo.
+  * **`MainTabs.js`:** Configuração do menu inferior (Bottom Tab Navigation). **Motivo:** Proporciona uma navegação fluida entre Água, Energia e Dicas sem recarregar a tela inteira.
+
+* **`src/contexts/` (Gerenciamento de Estado Global)**
+  * **`AuthContext.js`:** Gerencia as informações do usuário logado. **Motivo:** Evita a necessidade de buscar os dados do usuário no banco local toda vez que ele troca de tela, mantendo a sessão ativa na memória do app.
+  * **`ThemeContext.js`:** Controla as cores do aplicativo (Tema Claro/Escuro). **Motivo:** Permite que todas as telas puxem as cores dinamicamente desse arquivo. Se o tema for alterado, o app inteiro muda as cores instantaneamente sem travamentos.
+
+* **`src/services/api.js` (Comunicação com a Nuvem)**
+  * Arquivo único para lidar com requisições HTTP utilizando o `fetch` nativo.
+  * **Motivo:** Centraliza a configuração do servidor. Se precisarmos mudar o endereço da API do `localhost` para o Railway na nuvem, basta alterar a variável `BASE_URL` neste único arquivo. Além disso, padroniza a captura de erros para evitar fechamentos inesperados do app.
 
 ---
 
-## ⚙️ Backend (Python / FastAPI)
+## Backend (Python / FastAPI)
 
 A API do backend foi estruturada de forma modular, permitindo que a regra de negócios fique completamente separada do banco de dados e das rotas da web. Fica na pasta `Backend_Api/src/`.
 
-### 📂 Principais Arquivos e Motivos:
+### Principais Arquivos e Motivos:
 * **`src/main.py`**: Ponto de entrada da aplicação. **Motivo:** É aqui que o servidor FastAPI é iniciado, onde configuramos o CORS (para o React conseguir fazer chamadas) e incluímos as rotas (routers).
 * **`src/database/connection.py`**: **Motivo:** Cria a "ponte" (Engine e Session) entre o código Python e o banco de dados. Ele lê o `DATABASE_URL` do `.env` e decide se vai conectar no Supabase ou no SQLite local.
 * **`src/models/models.py`**: **Motivo:** Utiliza o SQLAlchemy para mapear as classes Python (ex: `Usuario`) em tabelas reais do banco de dados relacional.
@@ -41,7 +59,7 @@ A API do backend foi estruturada de forma modular, permitindo que a regra de neg
 
 ---
 
-## 🗄️ Banco de Dados
+## Banco de Dados
 
 * **Desenvolvimento Local:** SQLite (`banco.sqlite`). Utilizado quando não há conexão com a internet ou as variáveis `.env` não estão configuradas.
 * **Produção:** **Supabase (PostgreSQL)**. Um banco de dados relacional poderoso hospedado na nuvem.
@@ -49,7 +67,7 @@ A API do backend foi estruturada de forma modular, permitindo que a regra de neg
 
 ---
 
-## 🚀 Deploy e Nuvem
+## Deploy e Nuvem
 
 O projeto foi configurado para ser totalmente hospedado na nuvem (Production-Ready).
 
@@ -61,7 +79,7 @@ O projeto foi configurado para ser totalmente hospedado na nuvem (Production-Rea
 
 ---
 
-## 🔑 Segurança e Boas Práticas
+## Segurança e Boas Práticas
 
 * **`.env` (Variáveis de Ambiente):** Senhas do banco de dados e do Gmail NUNCA são colocadas diretamente no código. Elas ficam no arquivo oculto `.env`, que não é enviado para o GitHub (está no `.gitignore`).
 * **Senhas em Hash:** Se alguém invadir o banco de dados do Supabase, não verá as senhas dos usuários, apenas um código embaralhado pelo `bcrypt`.

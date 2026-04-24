@@ -4,7 +4,7 @@ Guia completo para configurar e rodar o projeto **Consumo** em qualquer computad
 
 ---
 
-## 📋 Pré-requisitos
+## Pré-requisitos
 
 Certifique-se de que você tem instalado:
 
@@ -23,7 +23,7 @@ git --version
 
 ---
 
-## 🔽 Passo 1: Clonar o Repositório
+## Passo 1: Clonar o Repositório
 
 ```bash
 git clone https://github.com/seu-usuario/Consumo.git
@@ -68,7 +68,7 @@ alembic upgrade head
 
 ---
 
-## 📱 Passo 3: Configurar o Frontend (React/Expo)
+## Passo 3: Configurar o Frontend (React/Expo)
 
 ### 3.1 Navegar para a pasta do Frontend e instalar
 
@@ -79,7 +79,7 @@ npm install
 
 ---
 
-## ▶️ Passo 4: Rodar o Projeto
+## Passo 4: Rodar o Projeto
 
 ### **Terminal 1 - Backend (FastAPI)**
 
@@ -110,14 +110,14 @@ Isso abrirá o Expo Metro bundler. Você pode:
 
 ---
 
-## 🌐 Acessar a Aplicação
+## Acessar a Aplicação
 
 - **Backend**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs (Swagger)
 
 ---
 
-## 🆘 Troubleshooting
+## Troubleshooting
 
 ### Erro: "ModuleNotFoundError: No module named 'src'"
 Certifique-se de estar rodando o comando `uvicorn` de dentro da pasta raiz `Backend_Api` (e não dentro de `src`). O comando exato é `uvicorn src.main:app --reload`.

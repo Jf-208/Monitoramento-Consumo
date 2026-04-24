@@ -1,3 +1,6 @@
+// Home/index.js
+// Tela principal (Dashboard geral) exibida após o login.
+// Ela pode conter atalhos para os painéis de Água e Energia, além de resumos gerais de consumo.
 import React, { useContext } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { AuthContext } from '../../contexts/AuthContext';

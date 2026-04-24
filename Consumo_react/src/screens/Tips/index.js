@@ -1,3 +1,6 @@
+// Tips/index.js
+// Tela de Dicas de Sustentabilidade.
+// Exibe uma lista de conselhos para economia de água e energia.
 import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';

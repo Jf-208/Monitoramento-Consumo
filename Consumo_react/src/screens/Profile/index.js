@@ -25,7 +25,7 @@ export default function PerfilScreen({ navigation }) {
 
   // ─── LÓGICA DE GAMIFICAÇÃO ─────────────────────
   // O nível muda automaticamente conforme o usuário economiza recursos.
-  // Os thresholds podem ser ajustados conforme necessário.
+  // Os thresholds/limites podem ser ajustados conforme necessário.
   let nivel = "Iniciante Sustentável";
   let nivelSub = "Continue assim para alcançar Pro!";
   let nivelIcon = "🌱";

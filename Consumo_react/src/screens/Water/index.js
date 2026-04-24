@@ -1,3 +1,7 @@
+// Water/index.js
+// Tela de Dashboard de Água.
+// Exibe o consumo de água em tempo real, permite simular o tempo de banho e a vazão do chuveiro,
+// e calcula o custo estimado e litros gastos.
 import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Slider from '@react-native-community/slider';

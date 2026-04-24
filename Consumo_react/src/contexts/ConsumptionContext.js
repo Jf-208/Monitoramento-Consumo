@@ -1,3 +1,7 @@
+// ConsumptionContext.js
+// Contexto global para armazenar dados de consumo em tempo real.
+// Salva valores de simulação (como tempo de banho, potência, etc) para que eles não sejam perdidos
+// quando o usuário navega entre as telas de Água e Energia.
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

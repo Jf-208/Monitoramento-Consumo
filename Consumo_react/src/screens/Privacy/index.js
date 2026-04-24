@@ -1,3 +1,6 @@
+// Privacy/index.js
+// Tela de Política de Privacidade.
+// Exibe informações textuais sobre como os dados do usuário são armazenados e tratados (LGPD).
 import React, { useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';

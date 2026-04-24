@@ -22,7 +22,7 @@ def enviar_codigo_reset(email_destino: str, codigo: str) -> bool:
     senha_app = os.getenv("EMAIL_SENHA_APP")
 
     if not remetente or not senha_app:
-        print("⚠️ Credenciais de e-mail não configuradas no .env")
+        print("Credenciais de e-mail não configuradas no .env")
         return False
 
     # Montagem do e-mail em HTML (visual profissional)
@@ -55,7 +55,7 @@ def enviar_codigo_reset(email_destino: str, codigo: str) -> bool:
             <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #F5A623;">{codigo}</span>
         </div>
         
-        <p style="color: #8899AA; font-size: 13px;">⏰ Este código expira em <strong>10 minutos</strong>.</p>
+        <p style="color: #8899AA; font-size: 13px;">⏰Este código expira em <strong>10 minutos</strong>.</p>
         <p style="color: #8899AA; font-size: 13px;">Se você não solicitou essa redefinição, ignore este e-mail.</p>
         
         <hr style="border: 1px solid #1E3A5F; margin: 24px 0;">
@@ -75,8 +75,8 @@ def enviar_codigo_reset(email_destino: str, codigo: str) -> bool:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as servidor:
             servidor.login(remetente, senha_app)
             servidor.sendmail(remetente, email_destino, msg.as_string())
-        print(f"✅ E-mail enviado para {email_destino}")
+        print(f"E-mail enviado para {email_destino}")
         return True
     except Exception as e:
-        print(f"❌ Erro ao enviar e-mail: {e}")
+        print(f"Erro ao enviar e-mail: {e}")
         return False
