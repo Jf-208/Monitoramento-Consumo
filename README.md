@@ -4,32 +4,34 @@ Aplicação full-stack para monitoramento e análise de consumo de energia e ág
 
 ---
 
-## 🎯 Estrutura do Projeto
+## 🎯 Estrutura do Projeto (Clean Architecture)
 
 ```
 Consumo/
 ├── Backend_Api/          # API FastAPI (Python)
-│   ├── principal.py      # Servidor principal
-│   ├── banco_de_dados.py # Configuração do banco
-│   ├── requirements.txt   # Dependências Python
-│   ├── esquemas/         # Schemas de validação
-│   ├── modelos/          # Modelos de dados
-│   ├── nucleo/           # Lógica central
-│   └── rotas/            # Rotas da API
+│   ├── src/              # Código-fonte do Backend
+│   │   ├── database/     # Conexão com banco e configurações
+│   │   ├── models/       # Modelos SQLAlchemy (Tabelas)
+│   │   ├── schemas/      # Schemas Pydantic (Validação)
+│   │   ├── routes/       # Rotas da API (v1)
+│   │   ├── core/         # Lógica central (Segurança, Email, Config)
+│   │   └── main.py       # Entrypoint (Servidor principal)
+│   ├── alembic/          # Migrações do banco de dados
+│   ├── .env.example      # Exemplo de variáveis de ambiente
+│   └── requirements.txt  # Dependências Python
 │
 ├── Consumo_react/        # App React/Expo (JavaScript)
-│   ├── package.json      # Dependências Node.js
-│   ├── principal.py      # Entrada principal
-│   ├── src/              # Código-fonte
-│   │   ├── components/   # Componentes reutilizáveis
-│   │   ├── screens/      # Telas da aplicação
+│   ├── src/              # Código-fonte do Frontend
+│   │   ├── components/   # Componentes reutilizáveis (basic, intermediate, layout)
+│   │   ├── screens/      # Telas da aplicação (em inglês e modularizadas)
 │   │   ├── services/     # Serviços (API, Auth)
 │   │   ├── contexts/     # Context API
-│   │   ├── navigations/  # Navegação
+│   │   ├── navigations/  # Navegação (Stack e Tabs)
 │   │   └── styles/       # Estilos globais
-│   └── assets/           # Imagens e ícones
+│   ├── jsconfig.json     # Configuração de Aliases
+│   └── package.json      # Dependências Node.js
 │
-└── SETUP.md              # Guia de configuração
+└── SETUP.md              # Guia de configuração para novos desenvolvedores
 ```
 
 ---
@@ -51,12 +53,13 @@ cd Backend_Api
 python -m venv venv
 .\venv\Scripts\activate  # Windows
 pip install -r requirements.txt
-python principal.py
+alembic upgrade head    # Atualizar o banco de dados
+uvicorn src.main:app --reload
 
 # Frontend (Terminal 2)
 cd ../Consumo_react
 npm install
-npm start
+npx expo start
 ```
 
 ---
@@ -64,19 +67,15 @@ npm start
 ## 🛠️ Stack Tecnológico
 
 ### Backend
-
-- **FastAPI** - Framework web moderno
-- **SQLAlchemy** - ORM para banco de dados
-- **SQLite** - Banco de dados local
+- **FastAPI** - Framework web moderno e de alta performance
+- **SQLAlchemy & Alembic** - ORM e Versionamento de banco de dados
+- **PostgreSQL / SQLite** - Banco de dados escalável
 - **Pydantic** - Validação de dados
 
 ### Frontend
-
-- **React** - Biblioteca UI
-- **React Native** - Código multiplataforma
-- **Expo** - Plataforma de desenvolvimento
+- **React Native & Expo** - Framework Mobile multiplataforma
 - **React Navigation** - Navegação entre telas
-- **Context API** - Gerenciamento de estado
+- **Context API** - Gerenciamento de estado global
 
 ---
 
@@ -92,25 +91,24 @@ npm start
 
 ## 📱 Funcionalidades
 
-- ✅ Autenticação de usuários
+- ✅ Autenticação de usuários (Login/Registro/Esqueci Senha)
 - 📊 Gráficos de consumo (Energia e Água)
-- 💡 Dicas de economia
-- 📈 Relatórios de consumo
-- 🔐 Segurança de dados
+- 💡 Dicas de economia sustentável
+- 📈 Relatórios e histórico de consumo
+- 🔐 Segurança de dados com JWT e hashing (Bcrypt)
 
 ---
 
 ## ⚙️ Variáveis de Ambiente
 
-Crie arquivo `.env` na pasta `Backend_Api/`:
+Crie um arquivo `.env` na pasta `Backend_Api/` baseado no `.env.example`:
 
 ```env
-DATABASE_URL=sqlite:///./consumo.db
+DATABASE_URL=postgresql://user:password@host:port/db_name
 SECRET_KEY=sua_chave_secreta_aqui
-DEBUG=False
 ```
 
-⚠️ **Nunca commite `.env` no Git!** (já está em `.gitignore`)
+⚠️ **Nunca commite o `.env` original no Git!**
 
 ---
 
@@ -118,34 +116,21 @@ DEBUG=False
 
 | Método | Endpoint                  | Descrição           |
 | ------ | ------------------------- | ------------------- |
-| POST   | `/api/v1/auth/login`      | Login de usuário    |
-| POST   | `/api/v1/auth/register`   | Registro de usuário |
-| GET    | `/api/v1/consumo/energia` | Dados de energia    |
-| GET    | `/api/v1/consumo/agua`    | Dados de água       |
+| POST   | `/auth/login`             | Login de usuário    |
+| POST   | `/auth/register`          | Registro de usuário |
+| GET    | `/auth/reset-password`    | Resetar senha       |
 
-Veja documentação completa em: `http://localhost:8000/docs`
+Veja a documentação completa e interativa em: `http://localhost:8000/docs`
 
 ---
 
 ## 🤝 Contribuindo
 
 1. Crie uma branch para sua feature: `git checkout -b feature/sua-feature`
-2. Commit suas mudanças: `git commit -m 'Add sua-feature'`
+2. Commit suas mudanças: `git commit -m 'feat: Add sua-feature'`
 3. Push para a branch: `git push origin feature/sua-feature`
 4. Abra um Pull Request
 
 ---
 
-## 📝 Licença
-
-Este projeto é para fins educacionais e de demonstração.
-
----
-
-## 📞 Dúvidas?
-
-Consulte [SETUP.md](./SETUP.md) para troubleshooting detalhado.
-
----
-
-**Desenvolvido com ❤️** para monitoramento inteligente de consumo.
+**Desenvolvido com ❤️** para monitoramento inteligente e sustentável de consumo.
