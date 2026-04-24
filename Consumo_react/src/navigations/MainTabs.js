@@ -14,7 +14,8 @@
 // porque elas usam ScrollView sem flex:1 no style.
 
 import React, { useState, useContext } from 'react';
-import { View, StyleSheet, Platform, StatusBar } from 'react-native';
+import { View, Platform, StatusBar } from 'react-native';
+import { ScaledSheet } from 'react-native-size-matters';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -44,18 +45,19 @@ export default function MainTabs({ navigation }) {
     }
   };
 
-  const styles = StyleSheet.create({
+  const styles = ScaledSheet.create({
     // SafeAreaView protege TOPO e BASE — a BottomNav nunca some
     safeArea: {
       flex: 1,
+      width: '100%',
       backgroundColor: colors.bg,
     },
     header: {
-      height: 56,
+      height: '56@ms',
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'flex-end',
-      paddingHorizontal: 20,
+      paddingHorizontal: '20@s',
       paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
       zIndex: 10,
     },
@@ -63,6 +65,7 @@ export default function MainTabs({ navigation }) {
     // SEM paddingBottom! A BottomNav não é mais absolute.
     content: {
       flex: 1,
+      width: '100%',
     },
   });
 

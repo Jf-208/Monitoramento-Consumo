@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { ScaledSheet } from 'react-native-size-matters';
 import { AuthContext } from '../contexts/AuthContext';
 import { ThemeContext } from '../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,12 +28,12 @@ export default function AlterarSenhaScreen({ navigation }) {
     }
   };
 
-  const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bg, padding: 24 },
-    title: { fontSize: 24, fontWeight: 'bold', color: colors.text, marginBottom: 24, fontFamily: 'Sora-Bold' },
-    input: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 16, color: colors.text, marginBottom: 16 },
-    button: { backgroundColor: colors.blue, padding: 16, borderRadius: 16, alignItems: 'center', marginTop: 8 },
-    buttonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' }
+  const styles = ScaledSheet.create({
+    container: { flex: 1, backgroundColor: colors.bg, padding: '24@ms' },
+    title: { fontSize: '24@ms', fontWeight: 'bold', color: colors.text, marginBottom: '24@vs', fontFamily: 'Sora-Bold' },
+    input: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: '16@s', padding: '16@ms', color: colors.text, marginBottom: '16@vs' },
+    button: { backgroundColor: colors.blue, padding: '16@ms', borderRadius: '16@s', alignItems: 'center', marginTop: '8@vs' },
+    buttonText: { color: '#FFF', fontSize: '16@ms', fontWeight: 'bold' }
   });
 
   return (

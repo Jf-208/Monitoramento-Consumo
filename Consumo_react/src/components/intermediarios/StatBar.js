@@ -3,7 +3,8 @@
 // Usamos useEffect e Animated para criar a animação da barra enchendo quando a tela carrega.
 
 import React, { useContext, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, Animated } from 'react-native';
+import { ScaledSheet } from 'react-native-size-matters';
 import { ThemeContext } from '../../contexts/ThemeContext';
 
 export default function StatBar({ label, value, max, color, unit }) {
@@ -24,34 +25,34 @@ export default function StatBar({ label, value, max, color, unit }) {
     }).start();
   }, [pct]);
 
-  const styles = StyleSheet.create({
+  const styles = ScaledSheet.create({
     container: {
-      marginBottom: 16,
+      marginBottom: '16@vs',
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginBottom: 8,
+      marginBottom: '8@vs',
     },
     label: {
       color: colors.textSub,
-      fontSize: 12,
+      fontSize: '12@ms',
     },
     value: {
       color: color,
       fontWeight: 'bold',
-      fontSize: 13,
+      fontSize: '13@ms',
     },
     track: {
-      height: 6,
+      height: '6@vs',
       backgroundColor: color + '22',
-      borderRadius: 8,
+      borderRadius: '8@s',
       overflow: 'hidden',
     },
     bar: {
       height: '100%',
       backgroundColor: color,
-      borderRadius: 8,
+      borderRadius: '8@s',
     }
   });
 

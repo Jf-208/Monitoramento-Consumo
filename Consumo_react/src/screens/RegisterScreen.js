@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { ScaledSheet } from 'react-native-size-matters';
 import { AuthContext } from '../contexts/AuthContext';
 import { ThemeContext } from '../contexts/ThemeContext';
 
@@ -28,30 +29,30 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bg, padding: 24, justifyContent: 'center' },
-    title: { fontSize: 32, fontWeight: '800', color: colors.text, marginBottom: 8 },
-    subtitle: { fontSize: 16, color: colors.textSub, marginBottom: 40 },
+  const styles = ScaledSheet.create({
+    container: { flex: 1, backgroundColor: colors.bg, padding: '24@ms', justifyContent: 'center' },
+    title: { fontSize: '32@ms', fontWeight: '800', color: colors.text, marginBottom: '8@vs' },
+    subtitle: { fontSize: '16@ms', color: colors.textSub, marginBottom: '40@vs' },
     input: {
       backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 16,
-      padding: 16,
+      borderRadius: '16@s',
+      padding: '16@ms',
       color: colors.text,
-      marginBottom: 16,
-      fontSize: 16,
+      marginBottom: '16@vs',
+      fontSize: '16@ms',
     },
     button: {
       backgroundColor: colors.blue,
-      padding: 16,
-      borderRadius: 16,
+      padding: '16@ms',
+      borderRadius: '16@s',
       alignItems: 'center',
-      marginTop: 8,
+      marginTop: '8@vs',
     },
-    buttonText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-    link: { marginTop: 24, alignItems: 'center' },
-    linkText: { color: colors.textSub, fontSize: 14 },
+    buttonText: { color: '#FFF', fontSize: '16@ms', fontWeight: '700' },
+    link: { marginTop: '24@vs', alignItems: 'center' },
+    linkText: { color: colors.textSub, fontSize: '14@ms' },
     linkHighlight: { color: colors.blue, fontWeight: '700' }
   });
 

@@ -15,7 +15,7 @@ export default function HomeScreen({ navigation }) {
   const styles = getHomeStyles(colors);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
       <Text style={styles.greeting}>Olá, {user?.nome || 'Usuário'} 👋</Text>
       <Text style={styles.title}>Seu painel</Text>
 
@@ -33,7 +33,6 @@ export default function HomeScreen({ navigation }) {
         <StatBar label="Consumo de Água" value={420} max={700} color={colors.blue} unit="L" />
         <StatBar label="Consumo de Energia" value={6.3} max={15} color={colors.gold} unit="kWh" />
       </View>
-      <View style={{height: 40}} />
     </ScrollView>
   );
 }

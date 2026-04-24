@@ -14,22 +14,10 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // O useEffect roda automaticamente quando o aplicativo é aberto
+  // Não restaura sessão anterior — sempre começa na tela de Login
   useEffect(() => {
-    loadSession(); // Verifica se o usuário já havia logado antes
+    setIsLoading(false);
   }, []);
-
-  const loadSession = async () => {
-    try {
-      const storedUser = await AsyncStorage.getItem('@user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
-    } catch (e) {
-      console.log('Error loading session:', e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const login = async (email, senha) => {
     try {

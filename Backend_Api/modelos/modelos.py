@@ -9,6 +9,8 @@ class Usuario(Base):
     nome = Column(String(50), nullable=False)
     email = Column(String(50), nullable=False, unique=True)
     senha = Column(String(255), nullable=False)
+    codigo_reset = Column(String(6), nullable=True)
+    codigo_reset_expira = Column(DateTime(timezone=True), nullable=True)
 
 
 class Consumo(Base):

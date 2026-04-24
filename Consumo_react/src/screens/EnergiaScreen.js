@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import Slider from '@react-native-community/slider';
+import { verticalScale } from 'react-native-size-matters';
 import { ThemeContext } from '../contexts/ThemeContext';
 import { ConsumptionContext } from '../contexts/ConsumptionContext';
 import { getEnergiaStyles } from '../styles/screensStyles';
@@ -23,7 +24,7 @@ export default function EnergiaScreen({ navigation }) {
   ];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: verticalScale(80) }} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={{color: colors.textSub, fontSize: 18}}>←</Text>

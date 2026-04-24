@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { ScaledSheet } from 'react-native-size-matters';
 import { ThemeContext } from '../contexts/ThemeContext';
 
 export default function DicasScreen({ navigation }) {
@@ -13,23 +14,23 @@ export default function DicasScreen({ navigation }) {
     { icon: "🫙", title: "Reúso de água", desc: "Água do enxágue pode ser reaproveitada para limpeza", cor: colors.blue },
   ];
 
-  const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 20, paddingTop: 20 },
-    header: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
-    backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
-    headerTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text, marginLeft: 16 },
+  const styles = ScaledSheet.create({
+    container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: '20@s', paddingTop: '20@vs' },
+    header: { flexDirection: 'row', alignItems: 'center', marginBottom: '24@vs' },
+    backBtn: { width: '40@s', height: '40@s', borderRadius: '12@s', backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
+    headerTitle: { fontSize: '20@ms', fontWeight: 'bold', color: colors.text, marginLeft: '16@s' },
     dicaCard: {
       flexDirection: 'row', alignItems: 'center',
-      padding: 16, borderRadius: 18, borderWidth: 1,
-      marginBottom: 12,
+      padding: '16@ms', borderRadius: '18@s', borderWidth: 1,
+      marginBottom: '12@vs',
     },
     iconBox: {
-      width: 48, height: 48, borderRadius: 14,
+      width: '48@s', height: '48@s', borderRadius: '14@s',
       alignItems: 'center', justifyContent: 'center',
-      marginRight: 16, borderWidth: 1,
+      marginRight: '16@s', borderWidth: 1,
     },
-    dicaTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
-    dicaDesc: { fontSize: 13, color: colors.textSub, flexShrink: 1 }
+    dicaTitle: { fontSize: '16@ms', fontWeight: 'bold', marginBottom: '4@vs' },
+    dicaDesc: { fontSize: '13@ms', color: colors.textSub, flexShrink: 1 }
   });
 
   return (

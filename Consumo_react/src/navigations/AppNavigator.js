@@ -16,6 +16,7 @@ import DicasScreen from '../screens/DicasScreen';
 import PrivacidadeScreen from '../screens/PrivacidadeScreen';
 import AjudaScreen from '../screens/AjudaScreen';
 import AlterarSenhaScreen from '../screens/AlterarSenhaScreen';
+import EsqueciSenhaScreen from '../screens/EsqueciSenhaScreen';
 
 const Stack = createStackNavigator();
 
@@ -50,6 +51,7 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="EsqueciSenha" component={EsqueciSenhaScreen} />
           </>
         )}
       </Stack.Navigator>

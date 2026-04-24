@@ -1,19 +1,20 @@
 import React, { useContext } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { ScaledSheet } from 'react-native-size-matters';
 import { ThemeContext } from '../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AjudaScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
 
-  const styles = StyleSheet.create({
-    container: { flexGrow: 1, backgroundColor: colors.bg, padding: 24 },
-    title: { fontSize: 24, fontWeight: 'bold', color: colors.text, marginBottom: 24, fontFamily: 'Sora-Bold' },
-    faqBox: { backgroundColor: colors.surface, padding: 16, borderRadius: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.border },
-    question: { fontSize: 16, fontWeight: 'bold', color: colors.text, marginBottom: 8 },
-    answer: { fontSize: 14, color: colors.textSub, lineHeight: 20 },
-    backButton: { marginTop: 24, alignSelf: 'center' },
-    backText: { color: colors.blue, fontSize: 16, fontWeight: 'bold' }
+  const styles = ScaledSheet.create({
+    container: { flexGrow: 1, backgroundColor: colors.bg, padding: '24@ms' },
+    title: { fontSize: '24@ms', fontWeight: 'bold', color: colors.text, marginBottom: '24@vs', fontFamily: 'Sora-Bold' },
+    faqBox: { backgroundColor: colors.surface, padding: '16@ms', borderRadius: '16@s', marginBottom: '16@vs', borderWidth: 1, borderColor: colors.border },
+    question: { fontSize: '16@ms', fontWeight: 'bold', color: colors.text, marginBottom: '8@vs' },
+    answer: { fontSize: '14@ms', color: colors.textSub, lineHeight: '20@ms' },
+    backButton: { marginTop: '24@vs', alignSelf: 'center' },
+    backText: { color: colors.blue, fontSize: '16@ms', fontWeight: 'bold' }
   });
 
   return (

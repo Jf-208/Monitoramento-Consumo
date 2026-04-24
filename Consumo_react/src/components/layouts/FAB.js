@@ -3,7 +3,8 @@
 // Usamos Modal para fazer a tela escurecer atrás dos botões quando ele é aberto.
 
 import React, { useState, useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback, Platform, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, Platform, StatusBar } from 'react-native';
+import { ScaledSheet } from 'react-native-size-matters';
 import { ThemeContext } from '../../contexts/ThemeContext';
 
 export default function FAB({ navigation }) {
@@ -22,49 +23,49 @@ export default function FAB({ navigation }) {
     navigation.navigate(screenId);
   };
 
-  const styles = StyleSheet.create({
+  const styles = ScaledSheet.create({
     fabButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: '44@s',
+      height: '44@s',
+      borderRadius: '22@s',
       alignItems: 'center',
       justifyContent: 'center',
       elevation: 5,
     },
     fabText: {
       color: '#FFF',
-      fontSize: 24,
-      lineHeight: 26,
+      fontSize: '24@ms',
+      lineHeight: '26@ms',
     },
     menuContainer: {
       position: 'absolute',
       top: Platform.OS === 'android' ? StatusBar.currentHeight + 8 : 8,
-      right: 20,
+      right: '20@s',
       alignItems: 'flex-end',
       zIndex: 100,
     },
     menuItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 16,
+      marginBottom: '16@vs',
     },
     menuLabel: {
       backgroundColor: colors.surface,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 12,
+      paddingHorizontal: '12@s',
+      paddingVertical: '6@vs',
+      borderRadius: '12@s',
       borderWidth: 1,
       borderColor: colors.border,
       overflow: 'hidden',
-      marginRight: 12,
-      fontSize: 14,
+      marginRight: '12@s',
+      fontSize: '14@ms',
       fontWeight: 'bold',
       elevation: 2,
     },
     menuIconBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: '44@s',
+      height: '44@s',
+      borderRadius: '22@s',
       borderWidth: 2,
       alignItems: 'center',
       justifyContent: 'center',

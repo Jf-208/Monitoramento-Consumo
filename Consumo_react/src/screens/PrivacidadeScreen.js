@@ -1,17 +1,18 @@
 import React, { useContext } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { ScaledSheet } from 'react-native-size-matters';
 import { ThemeContext } from '../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PrivacidadeScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
 
-  const styles = StyleSheet.create({
-    container: { flexGrow: 1, backgroundColor: colors.bg, padding: 24 },
-    title: { fontSize: 24, fontWeight: 'bold', color: colors.text, marginBottom: 24, fontFamily: 'Sora-Bold' },
-    text: { fontSize: 16, color: colors.textSub, lineHeight: 24, marginBottom: 16 },
-    backButton: { marginTop: 24, alignSelf: 'center' },
-    backText: { color: colors.blue, fontSize: 16, fontWeight: 'bold' }
+  const styles = ScaledSheet.create({
+    container: { flexGrow: 1, backgroundColor: colors.bg, padding: '24@ms' },
+    title: { fontSize: '24@ms', fontWeight: 'bold', color: colors.text, marginBottom: '24@vs', fontFamily: 'Sora-Bold' },
+    text: { fontSize: '16@ms', color: colors.textSub, lineHeight: '24@ms', marginBottom: '16@vs' },
+    backButton: { marginTop: '24@vs', alignSelf: 'center' },
+    backText: { color: colors.blue, fontSize: '16@ms', fontWeight: 'bold' }
   });
 
   return (

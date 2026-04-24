@@ -8,7 +8,7 @@
 //   - Azul (Água), Dourado (Energia), Roxo (Outros/Vampiro)
 
 import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Modal, Dimensions, StyleSheet } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import { ThemeContext } from '../contexts/ThemeContext';
 
@@ -31,7 +31,7 @@ export default function RelatoriosScreen() {
   const pieData = [
     { name: 'Água',              population: 45, color: colors.blue,            legendFontColor: colors.textSub, legendFontSize: 12 },
     { name: 'Energia',           population: 35, color: colors.gold,            legendFontColor: colors.textSub, legendFontSize: 12 },
-    { name: 'Outros (Vampiro)',  population: 20, color: colors.violet || '#A78BFA', legendFontColor: colors.textSub, legendFontSize: 12 },
+    { name: 'Vampiro',  population: 20, color: colors.violet || '#A78BFA', legendFontColor: colors.textSub, legendFontSize: 12 },
   ];
 
   const chartConfig = {
@@ -39,7 +39,6 @@ export default function RelatoriosScreen() {
   };
 
   const styles = StyleSheet.create({
-    // flex: 1 para limitar o ScrollView ao espaço do pai (não empurrar BottomNav)
     scrollContainer: { flex: 1 },
     inner: { paddingHorizontal: 20, paddingTop: 20 },
     card: {
@@ -86,7 +85,7 @@ export default function RelatoriosScreen() {
     <>
       <ScrollView
         style={styles.scrollContainer}
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
+        contentContainerStyle={{ paddingBottom: 16 }}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.inner}>
@@ -125,7 +124,7 @@ export default function RelatoriosScreen() {
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: vampiroColor }]} />
-                <Text style={styles.legendText}>Outros (Vampiro)</Text>
+                <Text style={styles.legendText}>Vampiro</Text>
               </View>
             </View>
           </View>
@@ -148,7 +147,7 @@ export default function RelatoriosScreen() {
                 paddingLeft="0"
                 absolute={false}
               />
-              <Text style={styles.pieNote}>Toque para saber sobre o Consumo Vampiro 🧛</Text>
+              <Text style={styles.pieNote}>Toque para saber sobre o Consumo Vampiro</Text>
             </TouchableOpacity>
           </View>
         </View>

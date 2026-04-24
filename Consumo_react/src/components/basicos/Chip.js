@@ -3,39 +3,40 @@
 // É usado para mostrar informações rápidas, como a água poupada ou o nível sustentável.
 
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
+import { ScaledSheet } from 'react-native-size-matters';
 import { ThemeContext } from '../../contexts/ThemeContext';
 
 export default function Chip({ label, value, color, icon }) {
   // Pegamos as cores atuais do tema (Claro ou Escuro) do Contexto
   const { colors } = useContext(ThemeContext);
 
-  const styles = StyleSheet.create({
+  const styles = ScaledSheet.create({
     container: {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: color + '16', // O '16' no final da cor adiciona transparência (hex alpha)
       borderColor: color + '38',
       borderWidth: 1,
-      borderRadius: 12,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      marginRight: 8,
-      marginBottom: 8,
+      borderRadius: '12@s',
+      paddingVertical: '8@vs',
+      paddingHorizontal: '12@s',
+      marginRight: '8@s',
+      marginBottom: '8@vs',
     },
     iconText: {
-      fontSize: 14,
-      marginRight: 6,
+      fontSize: '14@ms',
+      marginRight: '6@s',
     },
     labelText: {
       color: colors.textSub,
-      fontSize: 12,
-      marginRight: 4,
+      fontSize: '12@ms',
+      marginRight: '4@s',
     },
     valueText: {
       color: color,
       fontWeight: 'bold',
-      fontSize: 13,
+      fontSize: '13@ms',
     }
   });
 

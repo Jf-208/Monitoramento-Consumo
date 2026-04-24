@@ -1,14 +1,18 @@
 import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from modelos.base import Base
 
-# ATENÇÃO: Para a banca, o SQLite é a melhor opção pois cria o arquivo do banco localmente 
-# sem precisar instalar e configurar o PostgreSQL.
-# Se DATABASE_URL não existir, ele cria um banco.sqlite na pasta atual.
+# Carrega as variáveis do arquivo .env automaticamente
+load_dotenv()
+
+# Pega a URL do banco do .env
+# Em produção: Supabase PostgreSQL
+# Se não existir no .env, cai para o SQLite local (fallback para desenvolvimento)
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./banco.sqlite")
 
-# Configurações do SQLite (check_same_thread=False é necessário para o FastAPI com SQLite)
+# Configurações diferentes para SQLite e PostgreSQL
 if DATABASE_URL.startswith("sqlite"):
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:

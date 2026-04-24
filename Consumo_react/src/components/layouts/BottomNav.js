@@ -6,7 +6,8 @@
 // Os LABELS são fixos e passados pelo MainTabs para nunca mudarem.
 
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { ScaledSheet } from 'react-native-size-matters';
 import { ThemeContext } from '../../contexts/ThemeContext';
 
 // Labels fixos — fallback caso MainTabs não passe
@@ -25,38 +26,39 @@ export default function BottomNav({ active, onNav, labels = DEFAULT_LABELS }) {
     { id: 'perfil',     icon: '◯' },
   ];
 
-  const styles = StyleSheet.create({
+  const styles = ScaledSheet.create({
     // SEM position: absolute! A barra é parte do layout normal.
     // O SafeAreaView do MainTabs garante que ela fique acima da
     // barra de navegação do sistema (gestos/botões).
     container: {
-      height: 64,
+      height: '64@ms',
       backgroundColor: colors.surface,
       borderTopWidth: 1,
       borderTopColor: colors.border,
       flexDirection: 'row',
       justifyContent: 'space-around',
       alignItems: 'center',
+      width: '100%',
     },
     btn: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: 24,
-      paddingVertical: 8,
+      paddingHorizontal: '24@s',
+      paddingVertical: '8@ms',
     },
     icon: {
-      fontSize: 22,
-      marginBottom: 4,
+      fontSize: '22@ms',
+      marginBottom: '4@ms',
     },
     label: {
-      fontSize: 11,
+      fontSize: '11@ms',
     },
     indicator: {
       position: 'absolute',
-      bottom: 2,
-      width: 16,
-      height: 3,
-      borderRadius: 2,
+      bottom: '2@ms',
+      width: '16@s',
+      height: '3@ms',
+      borderRadius: '2@s',
       backgroundColor: colors.gold,
     },
   });
