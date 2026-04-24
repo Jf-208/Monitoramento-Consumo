@@ -9,11 +9,11 @@
 
 import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Switch } from 'react-native';
-import { AuthContext } from '../contexts/AuthContext';
-import { ThemeContext } from '../contexts/ThemeContext';
-import { ConsumptionContext } from '../contexts/ConsumptionContext';
-import { getPerfilStyles } from '../styles/screensStyles';
-import Chip from '../components/basicos/Chip';
+import { AuthContext } from '../../contexts/AuthContext';
+import { ThemeContext } from '../../contexts/ThemeContext';
+import { ConsumptionContext } from '../../contexts/ConsumptionContext';
+import { getPerfilStyles } from '../../styles/screensStyles';
+import Chip from '../../components/basic/Chip';
 
 export default function PerfilScreen({ navigation }) {
   const { user, logout } = useContext(AuthContext);
@@ -85,19 +85,19 @@ export default function PerfilScreen({ navigation }) {
           />
         </View>
 
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('AlterarSenha')}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('ChangePassword')}>
           <Text style={styles.menuText}>Alterar Senha</Text>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Privacidade')}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Privacy')}>
           <Text style={styles.menuText}>Privacidade</Text>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.menuItem, { borderBottomWidth: 0 }]}
-          onPress={() => navigation.navigate('Ajuda')}
+          onPress={() => navigation.navigate('Help')}
         >
           <Text style={styles.menuText}>Ajuda</Text>
           <Text style={styles.menuArrow}>›</Text>

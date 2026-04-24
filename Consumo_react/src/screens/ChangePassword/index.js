@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
-import { AuthContext } from '../contexts/AuthContext';
-import { ThemeContext } from '../contexts/ThemeContext';
+import { AuthContext } from '../../contexts/AuthContext';
+import { ThemeContext } from '../../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AlterarSenhaScreen({ navigation }) {

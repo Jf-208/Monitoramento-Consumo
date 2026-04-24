@@ -1,11 +1,11 @@
 import React, { useContext } from 'react';
 import { View, Text, ScrollView } from 'react-native';
-import { AuthContext } from '../contexts/AuthContext';
-import { ThemeContext } from '../contexts/ThemeContext';
-import { ConsumptionContext } from '../contexts/ConsumptionContext';
-import { getHomeStyles } from '../styles/screensStyles';
-import Chip from '../components/basicos/Chip';
-import StatBar from '../components/intermediarios/StatBar';
+import { AuthContext } from '../../contexts/AuthContext';
+import { ThemeContext } from '../../contexts/ThemeContext';
+import { ConsumptionContext } from '../../contexts/ConsumptionContext';
+import { getHomeStyles } from '../../styles/screensStyles';
+import Chip from '../../components/basic/Chip';
+import StatBar from '../../components/intermediate/StatBar';
 
 export default function HomeScreen({ navigation }) {
   const { user } = useContext(AuthContext);

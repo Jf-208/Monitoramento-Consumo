@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
-import { ThemeContext } from '../contexts/ThemeContext';
+import { ThemeContext } from '../../contexts/ThemeContext';
 
 export default function DicasScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);

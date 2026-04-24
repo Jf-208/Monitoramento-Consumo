@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { ThemeContext } from '../contexts/ThemeContext';
-import { ConsumptionContext } from '../contexts/ConsumptionContext';
-import { getAguaStyles } from '../styles/screensStyles';
+import { ThemeContext } from '../../contexts/ThemeContext';
+import { ConsumptionContext } from '../../contexts/ConsumptionContext';
+import { getAguaStyles } from '../../styles/screensStyles';
 
 export default function AguaScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);

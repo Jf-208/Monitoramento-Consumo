@@ -5,9 +5,9 @@
 
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
-import { ThemeContext } from '../contexts/ThemeContext';
+import { ThemeContext } from '../../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import api from '../services/api';
+import api from '../../services/api';
 
 export default function EsqueciSenhaScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);

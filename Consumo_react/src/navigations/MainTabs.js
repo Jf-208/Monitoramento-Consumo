@@ -18,18 +18,18 @@ import { View, Platform, StatusBar } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import HomeScreen from '../screens/HomeScreen';
-import RelatoriosScreen from '../screens/RelatoriosScreen';
-import PerfilScreen from '../screens/PerfilScreen';
-import BottomNav from '../components/layouts/BottomNav';
-import FAB from '../components/layouts/FAB';
+import HomeScreen from '../screens/Home';
+import RelatoriosScreen from '../screens/Reports';
+import PerfilScreen from '../screens/Profile';
+import BottomNav from '../components/layout/BottomNav';
+import FAB from '../components/layout/FAB';
 import { ThemeContext } from '../contexts/ThemeContext';
 
 // Labels fixos — NUNCA mudam
 const TAB_LABELS = {
   home: 'Início',
   relatorios: 'Relatórios',
-  perfil: 'Perfil',
+  perfil: 'Profile',
 };
 
 export default function MainTabs({ navigation }) {

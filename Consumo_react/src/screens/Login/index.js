@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
-import { AuthContext } from '../contexts/AuthContext';
-import { ThemeContext } from '../contexts/ThemeContext';
+import { AuthContext } from '../../contexts/AuthContext';
+import { ThemeContext } from '../../contexts/ThemeContext';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -78,7 +78,7 @@ export default function LoginScreen({ navigation }) {
         {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.buttonText}>Entrar</Text>}
       </TouchableOpacity>
 
-      <TouchableOpacity style={{ marginTop: 16, alignItems: 'center' }} onPress={() => navigation.navigate('EsqueciSenha')}>
+      <TouchableOpacity style={{ marginTop: 16, alignItems: 'center' }} onPress={() => navigation.navigate('ForgotPassword')}>
         <Text style={{ color: colors.blue, fontSize: 14, fontWeight: '600' }}>Esqueceu a senha?</Text>
       </TouchableOpacity>
 

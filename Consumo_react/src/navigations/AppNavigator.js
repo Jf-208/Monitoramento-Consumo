@@ -7,16 +7,16 @@ import { AuthContext } from '../contexts/AuthContext';
 import { ThemeContext } from '../contexts/ThemeContext';
 
 // Screens
-import LoginScreen from '../screens/LoginScreen';
-import RegisterScreen from '../screens/RegisterScreen';
+import LoginScreen from '../screens/Login';
+import RegisterScreen from '../screens/Register';
 import MainTabs from './MainTabs';
-import AguaScreen from '../screens/AguaScreen';
-import EnergiaScreen from '../screens/EnergiaScreen';
-import DicasScreen from '../screens/DicasScreen';
-import PrivacidadeScreen from '../screens/PrivacidadeScreen';
-import AjudaScreen from '../screens/AjudaScreen';
-import AlterarSenhaScreen from '../screens/AlterarSenhaScreen';
-import EsqueciSenhaScreen from '../screens/EsqueciSenhaScreen';
+import AguaScreen from '../screens/Water';
+import EnergiaScreen from '../screens/Energy';
+import DicasScreen from '../screens/Tips';
+import PrivacidadeScreen from '../screens/Privacy';
+import AjudaScreen from '../screens/Help';
+import AlterarSenhaScreen from '../screens/ChangePassword';
+import EsqueciSenhaScreen from '../screens/ForgotPassword';
 
 const Stack = createStackNavigator();
 
@@ -39,19 +39,19 @@ export default function AppNavigator() {
           // Authenticated Stack
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />
-            <Stack.Screen name="Agua" component={AguaScreen} />
-            <Stack.Screen name="Energia" component={EnergiaScreen} />
-            <Stack.Screen name="Dicas" component={DicasScreen} />
-            <Stack.Screen name="Privacidade" component={PrivacidadeScreen} />
-            <Stack.Screen name="Ajuda" component={AjudaScreen} />
-            <Stack.Screen name="AlterarSenha" component={AlterarSenhaScreen} />
+            <Stack.Screen name="Water" component={AguaScreen} />
+            <Stack.Screen name="Energy" component={EnergiaScreen} />
+            <Stack.Screen name="Tips" component={DicasScreen} />
+            <Stack.Screen name="Privacy" component={PrivacidadeScreen} />
+            <Stack.Screen name="Help" component={AjudaScreen} />
+            <Stack.Screen name="ChangePassword" component={AlterarSenhaScreen} />
           </>
         ) : (
           // Auth Stack
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
-            <Stack.Screen name="EsqueciSenha" component={EsqueciSenhaScreen} />
+            <Stack.Screen name="ForgotPassword" component={EsqueciSenhaScreen} />
           </>
         )}
       </Stack.Navigator>

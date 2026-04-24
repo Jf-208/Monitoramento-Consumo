@@ -12,9 +12,9 @@ export default function FAB({ navigation }) {
   const { colors } = useContext(ThemeContext);
 
   const items = [
-    { id: 'Agua', icon: '💧', label: 'Água', color: colors.blue },
-    { id: 'Energia', icon: '⚡', label: 'Energia', color: colors.gold },
-    { id: 'Dicas', icon: '🌿', label: 'Dicas', color: colors.teal },
+    { id: 'Water', icon: '💧', label: 'Água', color: colors.blue },
+    { id: 'Energy', icon: '⚡', label: 'Energy', color: colors.gold },
+    { id: 'Tips', icon: '🌿', label: 'Tips', color: colors.teal },
   ];
 
   const handleSelect = (screenId) => {

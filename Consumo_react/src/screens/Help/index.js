@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
-import { ThemeContext } from '../contexts/ThemeContext';
+import { ThemeContext } from '../../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AjudaScreen({ navigation }) {

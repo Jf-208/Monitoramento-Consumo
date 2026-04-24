@@ -2,9 +2,9 @@ import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { verticalScale } from 'react-native-size-matters';
-import { ThemeContext } from '../contexts/ThemeContext';
-import { ConsumptionContext } from '../contexts/ConsumptionContext';
-import { getEnergiaStyles } from '../styles/screensStyles';
+import { ThemeContext } from '../../contexts/ThemeContext';
+import { ConsumptionContext } from '../../contexts/ConsumptionContext';
+import { getEnergiaStyles } from '../../styles/screensStyles';
 
 export default function EnergiaScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);

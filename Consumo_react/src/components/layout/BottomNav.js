@@ -14,7 +14,7 @@ import { ThemeContext } from '../../contexts/ThemeContext';
 const DEFAULT_LABELS = {
   home: 'Início',
   relatorios: 'Relatórios',
-  perfil: 'Perfil',
+  perfil: 'Profile',
 };
 
 export default function BottomNav({ active, onNav, labels = DEFAULT_LABELS }) {

@@ -10,7 +10,7 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, Dimensions, StyleSheet } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
-import { ThemeContext } from '../contexts/ThemeContext';
+import { ThemeContext } from '../../contexts/ThemeContext';
 
 const SCREEN_W = Dimensions.get('window').width;
 
@@ -30,7 +30,7 @@ export default function RelatoriosScreen() {
   // ─── DADOS DO GRÁFICO DE PIZZA (soma = 100%) ───
   const pieData = [
     { name: 'Água',              population: 45, color: colors.blue,            legendFontColor: colors.textSub, legendFontSize: 12 },
-    { name: 'Energia',           population: 35, color: colors.gold,            legendFontColor: colors.textSub, legendFontSize: 12 },
+    { name: 'Energy',           population: 35, color: colors.gold,            legendFontColor: colors.textSub, legendFontSize: 12 },
     { name: 'Vampiro',  population: 20, color: colors.violet || '#A78BFA', legendFontColor: colors.textSub, legendFontSize: 12 },
   ];
 
