@@ -13,8 +13,8 @@ export default function FAB({ navigation }) {
 
   const items = [
     { id: 'Water', icon: '💧', label: 'Água', color: colors.blue },
-    { id: 'Energy', icon: '⚡', label: 'Energy', color: colors.gold },
-    { id: 'Tips', icon: '🌿', label: 'Tips', color: colors.teal },
+    { id: 'Energy', icon: '⚡', label: 'Energia', color: colors.gold },
+    { id: 'Tips', icon: '🌿', label: 'Dicas', color: colors.teal },
   ];
 
   const handleSelect = (screenId) => {
