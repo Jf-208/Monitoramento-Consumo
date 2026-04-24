@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from modelos.base import Base
+from src.models.base import Base
 
 # Carrega as variáveis do arquivo .env automaticamente
 load_dotenv()

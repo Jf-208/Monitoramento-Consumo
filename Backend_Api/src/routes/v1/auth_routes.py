@@ -1,10 +1,10 @@
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from banco_de_dados import get_db
-from modelos.modelos import Usuario
-from esquemas.usuario import UsuarioCriar, UsuarioResponse
-from nucleo.seguranca import hash_senha, verificar_senha
+from src.database.connection import get_db
+from src.models.models import Usuario
+from src.schemas.user_schema import UsuarioCriar, UsuarioResponse
+from src.core.security import hash_senha, verificar_senha
 
 # Aqui criamos o roteador de autenticação. É o carteiro que entrega as chamadas de /auth
 auth_router = APIRouter(prefix='/auth', tags=['auth'])
@@ -77,7 +77,7 @@ def alterar_senha(dados: SenhaAlterar, db: Session = Depends(get_db)):
 # ────────────────────────────────────────────────
 import random
 from datetime import datetime, timedelta, timezone
-from nucleo.email_service import enviar_codigo_reset
+from src.core.email_service import enviar_codigo_reset
 
 class EsqueciSenhaRequest(BaseModel):
     email: str

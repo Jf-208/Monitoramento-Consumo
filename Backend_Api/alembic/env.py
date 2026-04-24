@@ -14,8 +14,8 @@ load_dotenv()
 
 # Importa o Base com todos os modelos registrados
 # É ESSENCIAL importar os modelos aqui para que o Alembic os detecte
-from modelos.base import Base
-import modelos.modelos  # noqa: F401 — registra os modelos no Base
+from src.models.base import Base
+import src.models.models  # noqa: F401 — registra os modelos no Base
 
 # Configuração do Alembic
 config = context.config

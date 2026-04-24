@@ -1,8 +1,8 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from banco_de_dados import criar_tabelas
-from rotas.v1.auth import auth_router
+from src.database.connection import criar_tabelas
+from src.routes.v1.auth_routes import auth_router
 
 # Ciclo de vida da aplicação
 @asynccontextmanager
@@ -33,4 +33,4 @@ def health_check():
 # Incluindo a rota de autenticação (adicione as outras aqui futuramente)
 app.include_router(auth_router)
 
-# Comando para rodar: uvicorn principal:app --reload
+# Comando para rodar: uvicorn src.main:app --reload
