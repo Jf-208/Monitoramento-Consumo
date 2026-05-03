@@ -14,6 +14,7 @@ import { ThemeContext } from '../../contexts/ThemeContext';
 import { ConsumptionContext } from '../../contexts/ConsumptionContext';
 import { getPerfilStyles } from '../../styles/screensStyles';
 import Chip from '../../components/basic/Chip';
+import ScreenScrollView from '../../components/layout/ScreenScrollView';
 
 export default function PerfilScreen({ navigation }) {
   const { user, logout } = useContext(AuthContext);
@@ -28,30 +29,26 @@ export default function PerfilScreen({ navigation }) {
   // Os thresholds/limites podem ser ajustados conforme necessário.
   let nivel = "Iniciante Sustentável";
   let nivelSub = "Continue assim para alcançar Pro!";
-  let nivelIcon = "🌱";
+  let nivelIcon = "";
 
   if (aguaPoupada > 500 || energiaPoupada > 50) {
     nivel = "Mestre Wavunder";
     nivelSub = "Você é um herói do meio ambiente!";
-    nivelIcon = "🌍";
+    nivelIcon = "";
   } else if (aguaPoupada > 100 || energiaPoupada > 10) {
     nivel = "Entusiasta Eco";
     nivelSub = "Ótimo trabalho, rumo ao topo!";
-    nivelIcon = "🌳";
+    nivelIcon = "";
   }
 
   return (
-    <ScrollView
-      // flex: 1 no style = limita a altura ao espaço disponível
-      // SEM flexGrow no contentContainerStyle — na web ele impede o scroll!
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 16 }}
-      showsVerticalScrollIndicator={false}
+    <ScreenScrollView
+      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4 }}
     >
       {/* HEADER DO PERFIL — sem botão voltar (a BottomNav já navega) */}
       <View style={styles.profileHeader}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>👤</Text>
+          <Text style={styles.avatarText}>U</Text>
         </View>
         <Text style={styles.name}>{user?.nome || 'Usuário'}</Text>
         <Text style={styles.email}>{user?.email || 'email@exemplo.com'}</Text>
@@ -60,8 +57,8 @@ export default function PerfilScreen({ navigation }) {
       {/* CARDS DE ECONOMIA — dados do AsyncStorage via Context */}
       <Text style={styles.economizadosLabel}>Economizados</Text>
       <View style={styles.chipsRow}>
-        <Chip icon="💧" label="Água" value={`${aguaPoupada} L`} color={colors.blue} />
-        <Chip icon="⚡" label="Energia" value={`${energiaPoupada} kWh`} color={colors.gold} />
+        <Chip icon="" label="Agua" value={`${aguaPoupada} L`} color={colors.blue} />
+        <Chip icon="" label="Energia" value={`${energiaPoupada} kWh`} color={colors.gold} />
       </View>
 
       {/* CARD DE NÍVEL — gamificação dinâmica */}
@@ -108,6 +105,6 @@ export default function PerfilScreen({ navigation }) {
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
         <Text style={styles.logoutText}>Sair da conta</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </ScreenScrollView>
   );
 }

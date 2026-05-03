@@ -1,26 +1,37 @@
 // Tips/index.js
 // Tela de Dicas de Sustentabilidade.
 // Exibe uma lista de conselhos para economia de água e energia.
+// Aberta via Stack Navigator — tem SafeAreaView e ScrollView sem flex:1.
 import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { Text, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScaledSheet } from 'react-native-size-matters';
 import { ThemeContext } from '../../contexts/ThemeContext';
+import ScreenScrollView from '../../components/layout/ScreenScrollView';
 
 export default function DicasScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
 
   const dicas = [
-    { icon: "🚿", title: "Banhos curtos", desc: "Banhos de até 5 min economizam até 60% da água", cor: colors.blue },
-    { icon: "🔌", title: "Tirar da tomada", desc: "Desligar aparelhos em stand-by reduz até 12% no consumo", cor: colors.gold },
-    { icon: "💡", title: "Lâmpadas LED", desc: "Consomem até 80% menos energia que as incandescentes", cor: colors.teal },
-    { icon: "🌡️", title: "Ar-condicionado", desc: "Manter a 23°C reduz em 10% o consumo elétrico", cor: colors.violet },
-    { icon: "🫙", title: "Reúso de água", desc: "Água do enxágue pode ser reaproveitada para limpeza", cor: colors.blue },
+    { icon: '', title: 'Banhos curtos',    desc: 'Banhos de ate 5 min economizam ate 60% da agua',           cor: colors.blue },
+    { icon: '', title: 'Tirar da tomada',  desc: 'Desligar aparelhos em stand-by reduz ate 12% no consumo',  cor: colors.gold },
+    { icon: '', title: 'Lampadas LED',     desc: 'Consomem ate 80% menos energia que as incandescentes',     cor: colors.teal },
+    { icon: '', title: 'Ar-condicionado', desc: 'Manter a 23C reduz em 10% o consumo eletrico',              cor: colors.violet },
+    { icon: '', title: 'Reuso de agua',    desc: 'Agua do enxague pode ser reaproveitada para limpeza',      cor: colors.blue },
+    { icon: '', title: 'Vazamentos',       desc: 'Uma torneira gotejando desperdica 46L por dia!',           cor: colors.blue },
+    { icon: '', title: 'Maquina cheia',    desc: 'Maquina de lavar cheia economiza agua e energia',          cor: colors.teal },
+    { icon: '', title: 'Modo noturno',     desc: 'Usar modo noturno em dispositivos economiza ate 15%',      cor: colors.gold },
   ];
 
   const styles = ScaledSheet.create({
-    container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: '20@s', paddingTop: '20@vs' },
-    header: { flexDirection: 'row', alignItems: 'center', marginBottom: '24@vs' },
-    backBtn: { width: '40@s', height: '40@s', borderRadius: '12@s', backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
+    // SafeAreaView tem flex:1 — é o container raiz da tela Stack
+    safeArea:   { flex: 1, backgroundColor: colors.bg },
+    // ScrollView SEM flex:1 — resolve o scroll no Android
+    scroll:     { backgroundColor: colors.bg },
+    // padding vai no contentContainerStyle, não no style
+    inner:      { paddingHorizontal: '20@s', paddingTop: '20@vs', paddingBottom: '40@vs' },
+    header:     { flexDirection: 'row', alignItems: 'center', marginBottom: '24@vs' },
+    backBtn:    { width: '40@s', height: '40@s', borderRadius: '12@s', backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
     headerTitle: { fontSize: '20@ms', fontWeight: 'bold', color: colors.text, marginLeft: '16@s' },
     dicaCard: {
       flexDirection: 'row', alignItems: 'center',
@@ -32,33 +43,41 @@ export default function DicasScreen({ navigation }) {
       alignItems: 'center', justifyContent: 'center',
       marginRight: '16@s', borderWidth: 1,
     },
-    dicaTitle: { fontSize: '16@ms', fontWeight: 'bold', marginBottom: '4@vs' },
-    dicaDesc: { fontSize: '13@ms', color: colors.textSub, flexShrink: 1 }
+    dicaTitle: { fontSize: '15@ms', fontWeight: 'bold', marginBottom: '4@vs' },
+    dicaDesc:  { fontSize: '13@ms', color: colors.textSub, flexShrink: 1 },
   });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={{color: colors.textSub, fontSize: 18}}>←</Text>
+    // SafeAreaView com edges=['top'] — protege o topo na Stack Navigator
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScreenScrollView
+        contentContainerStyle={styles.inner}
+      >
+        {/* Header com botão voltar */}
+        <TouchableOpacity style={styles.header} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Text style={{ color: colors.textSub, fontSize: 18 }}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Dicas</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>🌿 Dicas</Text>
-      </View>
-      
-      <ScrollView showsVerticalScrollIndicator={false}>
+
         {dicas.map((d, i) => (
-          <View key={i} style={[styles.dicaCard, { backgroundColor: d.cor + '14', borderColor: d.cor + '35' }]}>
-            <View style={[styles.iconBox, { backgroundColor: d.cor + '20', borderColor: d.cor + '35' }]}>
-              <Text style={{fontSize: 24}}>{d.icon}</Text>
-            </View>
-            <View style={{flex: 1}}>
-              <Text style={[styles.dicaTitle, { color: d.cor }]}>{d.title}</Text>
+          <TouchableOpacity
+            key={i}
+            style={[styles.dicaCard, { backgroundColor: d.cor + '14', borderColor: d.cor + '35' }]}
+            activeOpacity={0.85}
+          >
+            <TouchableOpacity style={[styles.iconBox, { backgroundColor: d.cor + '20', borderColor: d.cor + '35' }]} activeOpacity={1}>
+              <Text style={{ fontSize: 24 }}>{d.icon}</Text>
+            </TouchableOpacity>
+            <Text style={[styles.dicaTitle, { color: d.cor, flex: 0, flexShrink: 0 }]} />
+            <Text style={{ flex: 1 }}>
+              <Text style={[styles.dicaTitle, { color: d.cor }]}>{d.title}{'\n'}</Text>
               <Text style={styles.dicaDesc}>{d.desc}</Text>
-            </View>
-          </View>
+            </Text>
+          </TouchableOpacity>
         ))}
-        <View style={{height: 40}}/>
-      </ScrollView>
-    </View>
+      </ScreenScrollView>
+    </SafeAreaView>
   );
 }

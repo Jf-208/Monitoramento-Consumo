@@ -2,7 +2,7 @@
 // Tela de Cadastro de novos usuários.
 // Contém o formulário (nome, e-mail, senha) e faz a validação antes de chamar a rota /auth/register da API.
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
 import { AuthContext } from '../../contexts/AuthContext';
 import { ThemeContext } from '../../contexts/ThemeContext';
@@ -33,7 +33,16 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const styles = ScaledSheet.create({
-    container: { flex: 1, backgroundColor: colors.bg, padding: '24@ms', justifyContent: 'center' },
+    container: { 
+      flex: 1, 
+      backgroundColor: colors.bg, 
+      padding: '24@ms', 
+      justifyContent: 'center',
+      ...Platform.select({
+        web: { height: '100vh', minHeight: '100vh' },
+        default: {},
+      }),
+    },
     title: { fontSize: '32@ms', fontWeight: '800', color: colors.text, marginBottom: '8@vs' },
     subtitle: { fontSize: '16@ms', color: colors.textSub, marginBottom: '40@vs' },
     input: {

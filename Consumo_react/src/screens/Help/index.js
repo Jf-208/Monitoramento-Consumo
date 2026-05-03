@@ -1,49 +1,55 @@
 // Help/index.js
-// Tela de Ajuda e Suporte.
-// Pode conter FAQs, contatos ou formulários para ajudar o usuário com dúvidas sobre o aplicativo.
+// Tela de Ajuda e Suporte com FAQ.
+// Aberta via Stack Navigator — usa SafeAreaView com edges=['top']
+// e ScrollView sem flex:1 para garantir scroll funcional no Android.
 import React, { useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScaledSheet } from 'react-native-size-matters';
 import { ThemeContext } from '../../contexts/ThemeContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { FAQ_AJUDA } from '../../constants/data';
+import ScreenScrollView from '../../components/layout/ScreenScrollView';
 
 export default function AjudaScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
 
   const styles = ScaledSheet.create({
-    container: { flexGrow: 1, backgroundColor: colors.bg, padding: '24@ms' },
-    title: { fontSize: '24@ms', fontWeight: 'bold', color: colors.text, marginBottom: '24@vs', fontFamily: 'Sora-Bold' },
-    faqBox: { backgroundColor: colors.surface, padding: '16@ms', borderRadius: '16@s', marginBottom: '16@vs', borderWidth: 1, borderColor: colors.border },
-    question: { fontSize: '16@ms', fontWeight: 'bold', color: colors.text, marginBottom: '8@vs' },
-    answer: { fontSize: '14@ms', color: colors.textSub, lineHeight: '20@ms' },
-    backButton: { marginTop: '24@vs', alignSelf: 'center' },
-    backText: { color: colors.blue, fontSize: '16@ms', fontWeight: 'bold' }
+    // SafeAreaView com flex:1 é o container raiz da tela
+    safeArea:    { flex: 1, backgroundColor: colors.bg },
+    // ScrollView SEM flex:1 — resolve o scroll no Android
+    scroll:      { backgroundColor: colors.bg },
+    // padding vai aqui no contentContainerStyle, não no style
+    inner:       { paddingHorizontal: '24@s', paddingTop: '20@vs', paddingBottom: '40@vs' },
+    header:      { flexDirection: 'row', alignItems: 'center', marginBottom: '24@vs' },
+    backBtn:     { width: '40@s', height: '40@s', borderRadius: '12@s', backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
+    headerTitle: { fontSize: '20@ms', fontWeight: 'bold', color: colors.text, marginLeft: '16@s' },
+    faqBox:      { backgroundColor: colors.surface, padding: '16@ms', borderRadius: '16@s', marginBottom: '16@vs', borderWidth: 1, borderColor: colors.border },
+    question:    { fontSize: '15@ms', fontWeight: 'bold', color: colors.text, marginBottom: '8@vs' },
+    answer:      { fontSize: '14@ms', color: colors.textSub, lineHeight: '22@ms' },
   });
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Ajuda e FAQ</Text>
-        
-        <View style={styles.faqBox}>
-          <Text style={styles.question}>Como os dados são calculados?</Text>
-          <Text style={styles.answer}>O Wavunder utiliza um algoritmo que cruza a potência nominal dos seus aparelhos com o tempo estimado de uso para gerar o consumo em kWh.</Text>
+    // edges=['top'] — protege o topo na Stack Navigator sem duplicar safe area
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScreenScrollView
+        contentContainerStyle={styles.inner}
+      >
+        {/* Header com botão voltar */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Text style={{ color: colors.textSub, fontSize: 18 }}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Ajuda e FAQ</Text>
         </View>
 
-        <View style={styles.faqBox}>
-          <Text style={styles.question}>Como mudar para modo escuro?</Text>
-          <Text style={styles.answer}>Vá até a tela de Perfil (ícone de engrenagem) e ative a chave "Modo Escuro".</Text>
-        </View>
-
-        <View style={styles.faqBox}>
-          <Text style={styles.question}>Como exportar relatórios?</Text>
-          <Text style={styles.answer}>Na tela de Relatórios, utilize a aba superior para alternar as visões e em breve teremos o botão de exportar para PDF.</Text>
-        </View>
-
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>Voltar</Text>
-        </TouchableOpacity>
-      </ScrollView>
+        {/* Usa FAQ_AJUDA do data.js — fonte única de verdade */}
+        {FAQ_AJUDA.map((item, index) => (
+          <View key={index} style={styles.faqBox}>
+            <Text style={styles.question}>{item.pergunta}</Text>
+            <Text style={styles.answer}>{item.resposta}</Text>
+          </View>
+        ))}
+      </ScreenScrollView>
     </SafeAreaView>
   );
 }

@@ -3,7 +3,7 @@
 // Permite que usuários existentes entrem na plataforma informando e-mail e senha.
 // Se o login for bem-sucedido, o AuthContext atualiza o estado global e redireciona para o Dashboard.
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
 import { AuthContext } from '../../contexts/AuthContext';
 import { ThemeContext } from '../../contexts/ThemeContext';
@@ -28,7 +28,16 @@ export default function LoginScreen({ navigation }) {
   };
 
   const styles = ScaledSheet.create({
-    container: { flex: 1, backgroundColor: colors.bg, padding: '24@ms', justifyContent: 'center' },
+    container: { 
+      flex: 1, 
+      backgroundColor: colors.bg, 
+      padding: '24@ms', 
+      justifyContent: 'center',
+      ...Platform.select({
+        web: { height: '100vh', minHeight: '100vh' },
+        default: {},
+      }),
+    },
     title: { fontSize: '32@ms', fontWeight: '800', color: colors.text, marginBottom: '8@vs', fontFamily: 'Sora-Bold' },
     subtitle: { fontSize: '16@ms', color: colors.textSub, marginBottom: '40@vs' },
     input: {

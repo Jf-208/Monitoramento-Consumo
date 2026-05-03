@@ -6,6 +6,7 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
 import { ThemeContext } from '../../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenScrollView from '../../components/layout/ScreenScrollView';
 
 export default function PrivacidadeScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
@@ -20,7 +21,9 @@ export default function PrivacidadeScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScreenScrollView
+        contentContainerStyle={styles.container}
+      >
         <Text style={styles.title}>Política de Privacidade</Text>
         
         <Text style={styles.text}>
@@ -41,7 +44,7 @@ export default function PrivacidadeScreen({ navigation }) {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>Voltar</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </ScreenScrollView>
     </SafeAreaView>
   );
 }

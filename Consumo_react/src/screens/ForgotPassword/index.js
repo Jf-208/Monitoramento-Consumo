@@ -4,9 +4,10 @@
 //   Etapa 2: Usuário digita o código + nova senha → senha redefinida
 
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { ThemeContext } from '../../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenScrollView from '../../components/layout/ScreenScrollView';
 import api from '../../services/api';
 
 export default function EsqueciSenhaScreen({ navigation }) {
@@ -64,7 +65,17 @@ export default function EsqueciSenhaScreen({ navigation }) {
   };
 
   const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bg, padding: 24, justifyContent: 'center' },
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+      padding: 24,
+      justifyContent: 'center',
+      // FIX WEB: sem height explícito, o container não preenche a tela na web
+      ...Platform.select({
+        web: { height: '100vh', minHeight: '100vh' },
+        default: {},
+      }),
+    },
     title: { fontSize: 28, fontWeight: '800', color: colors.text, marginBottom: 8 },
     subtitle: { fontSize: 15, color: colors.textSub, marginBottom: 32, lineHeight: 22 },
     input: {
@@ -103,7 +114,9 @@ export default function EsqueciSenhaScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
-      <View style={styles.container}>
+      <ScreenScrollView
+        contentContainerStyle={{ padding: 24, justifyContent: 'center', flexGrow: 1 }}
+      >
         {/* Indicador de etapa */}
         <View style={styles.etapaIndicator}>
           <View style={[styles.dot, { backgroundColor: etapa >= 1 ? colors.blue : colors.border }]} />
@@ -170,7 +183,7 @@ export default function EsqueciSenhaScreen({ navigation }) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>← Voltar ao <Text style={styles.backHighlight}>Login</Text></Text>
         </TouchableOpacity>
-      </View>
+      </ScreenScrollView>
     </SafeAreaView>
   );
 }

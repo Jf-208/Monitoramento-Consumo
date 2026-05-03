@@ -7,6 +7,7 @@ import { ScaledSheet } from 'react-native-size-matters';
 import { AuthContext } from '../../contexts/AuthContext';
 import { ThemeContext } from '../../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenScrollView from '../../components/layout/ScreenScrollView';
 
 export default function AlterarSenhaScreen({ navigation }) {
   const [senhaAtual, setSenhaAtual] = useState('');
@@ -41,7 +42,9 @@ export default function AlterarSenhaScreen({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
-      <View style={styles.container}>
+      <ScreenScrollView
+        contentContainerStyle={{ padding: 24 }}
+      >
         <Text style={styles.title}>Alterar Senha</Text>
         <TextInput
           style={styles.input}
@@ -65,7 +68,7 @@ export default function AlterarSenhaScreen({ navigation }) {
         <TouchableOpacity style={[styles.button, { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border, marginTop: 16 }]} onPress={() => navigation.goBack()}>
           <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>Cancelar</Text>
         </TouchableOpacity>
-      </View>
+      </ScreenScrollView>
     </SafeAreaView>
   );
 }
