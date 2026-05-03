@@ -1,35 +1,32 @@
 // BottomNav.js
-// Barra de navegação inferior do app Wavunder.
-// IMPORTANTE: NÃO usa position: absolute! Ela é um elemento normal do Flexbox,
-// posicionada no final do SafeAreaView. Isso garante que ela NUNCA fique
-// atrás da barra de navegação do celular (gestos/botões do Android).
-// Os LABELS são fixos e passados pelo MainTabs para nunca mudarem.
+// Barra de navegacao inferior do app Wavunder.
+// Usa Ionicons para icones em vez de caracteres Unicode.
+// IMPORTANTE: NAO usa position: absolute! Ela e um elemento normal do Flexbox,
+// posicionada no final do SafeAreaView. Os LABELS sao fixos do MainTabs.
 
 import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
+import { Ionicons } from '@expo/vector-icons';
 import { ThemeContext } from '../../contexts/ThemeContext';
 
-// Labels fixos — fallback caso MainTabs não passe
+// Labels fixos — fallback caso MainTabs nao passe
 const DEFAULT_LABELS = {
-  home: 'Início',
-  relatorios: 'Relatórios',
-  perfil: 'Profile',
+  home: 'Inicio',
+  relatorios: 'Relatorios',
+  perfil: 'Perfil',
 };
 
 export default function BottomNav({ active, onNav, labels = DEFAULT_LABELS }) {
   const { colors } = useContext(ThemeContext);
 
   const items = [
-    { id: 'home',       icon: '⊞' },
-    { id: 'relatorios', icon: '◫' },
-    { id: 'perfil',     icon: '◯' },
+    { id: 'home',       icon: 'home' },
+    { id: 'relatorios', icon: 'bar-chart' },
+    { id: 'perfil',     icon: 'person-circle' },
   ];
 
   const styles = ScaledSheet.create({
-    // SEM position: absolute! A barra é parte do layout normal.
-    // O SafeAreaView do MainTabs garante que ela fique acima da
-    // barra de navegação do sistema (gestos/botões).
     container: {
       height: '64@ms',
       backgroundColor: colors.surface,
@@ -46,12 +43,9 @@ export default function BottomNav({ active, onNav, labels = DEFAULT_LABELS }) {
       paddingHorizontal: '24@s',
       paddingVertical: '8@ms',
     },
-    icon: {
-      fontSize: '22@ms',
-      marginBottom: '4@ms',
-    },
     label: {
       fontSize: '11@ms',
+      marginTop: '2@ms',
     },
     indicator: {
       position: 'absolute',
@@ -70,9 +64,12 @@ export default function BottomNav({ active, onNav, labels = DEFAULT_LABELS }) {
         const label = labels[item.id] || item.id;
         return (
           <TouchableOpacity key={item.id} style={styles.btn} onPress={() => onNav(item.id)}>
-            <Text style={[styles.icon, { color: isActive ? colors.gold : colors.textMuted, opacity: isActive ? 1 : 0.5 }]}>
-              {item.icon}
-            </Text>
+            <Ionicons
+              name={isActive ? item.icon : `${item.icon}-outline`}
+              size={22}
+              color={isActive ? colors.gold : colors.textMuted}
+              style={{ opacity: isActive ? 1 : 0.5 }}
+            />
             <Text style={[styles.label, { color: isActive ? colors.gold : colors.textMuted, fontWeight: isActive ? '700' : '400' }]}>
               {label}
             </Text>

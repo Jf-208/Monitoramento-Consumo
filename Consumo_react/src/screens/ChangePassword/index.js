@@ -1,12 +1,14 @@
 // ChangePassword/index.js
-// Tela para Alterar a Senha (com o usuário já logado).
-// Solicita a senha atual e a nova senha, validando os dados antes de enviar a requisição PUT para /auth/alterar-senha.
+// Tela para Alterar a Senha (com o usuario ja logado).
+// Solicita a senha atual e a nova senha com PasswordInput (toggle de visibilidade).
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
 import { AuthContext } from '../../contexts/AuthContext';
 import { ThemeContext } from '../../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenScrollView from '../../components/layout/ScreenScrollView';
+import PasswordInput from '../../components/basic/PasswordInput';
 
 export default function AlterarSenhaScreen({ navigation }) {
   const [senhaAtual, setSenhaAtual] = useState('');
@@ -33,31 +35,26 @@ export default function AlterarSenhaScreen({ navigation }) {
 
   const styles = ScaledSheet.create({
     container: { flex: 1, backgroundColor: colors.bg, padding: '24@ms' },
-    title: { fontSize: '24@ms', fontWeight: 'bold', color: colors.text, marginBottom: '24@vs', fontFamily: 'Sora-Bold' },
-    input: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: '16@s', padding: '16@ms', color: colors.text, marginBottom: '16@vs' },
+    title: { fontSize: '24@ms', fontWeight: 'bold', color: colors.text, marginBottom: '24@vs' },
     button: { backgroundColor: colors.blue, padding: '16@ms', borderRadius: '16@s', alignItems: 'center', marginTop: '8@vs' },
     buttonText: { color: '#FFF', fontSize: '16@ms', fontWeight: 'bold' }
   });
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
-      <View style={styles.container}>
+      <ScreenScrollView
+        contentContainerStyle={{ padding: 24 }}
+      >
         <Text style={styles.title}>Alterar Senha</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Senha Atual"
-          placeholderTextColor={colors.textMuted}
-          secureTextEntry
+        <PasswordInput
           value={senhaAtual}
           onChangeText={setSenhaAtual}
+          placeholder="Senha Atual"
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Nova Senha"
-          placeholderTextColor={colors.textMuted}
-          secureTextEntry
+        <PasswordInput
           value={novaSenha}
           onChangeText={setNovaSenha}
+          placeholder="Nova Senha"
         />
         <TouchableOpacity style={styles.button} onPress={handleSalvar} disabled={loading}>
           {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.buttonText}>Salvar Nova Senha</Text>}
@@ -65,7 +62,7 @@ export default function AlterarSenhaScreen({ navigation }) {
         <TouchableOpacity style={[styles.button, { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border, marginTop: 16 }]} onPress={() => navigation.goBack()}>
           <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>Cancelar</Text>
         </TouchableOpacity>
-      </View>
+      </ScreenScrollView>
     </SafeAreaView>
   );
 }

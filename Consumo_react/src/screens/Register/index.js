@@ -1,11 +1,12 @@
 // Register/index.js
-// Tela de Cadastro de novos usuários.
-// Contém o formulário (nome, e-mail, senha) e faz a validação antes de chamar a rota /auth/register da API.
+// Tela de Cadastro de novos usuarios.
+// Contem formulario (nome, e-mail, senha) com PasswordInput e toggle de visibilidade.
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
 import { AuthContext } from '../../contexts/AuthContext';
 import { ThemeContext } from '../../contexts/ThemeContext';
+import PasswordInput from '../../components/basic/PasswordInput';
 
 export default function RegisterScreen({ navigation }) {
   const [nome, setNome] = useState('');
@@ -25,7 +26,7 @@ export default function RegisterScreen({ navigation }) {
     const res = await register(nome, email, senha);
     setLoading(false);
     if (res.success) {
-      alert('Sucesso! Conta criada. Faça login.');
+      alert('Sucesso! Conta criada. Faca login.');
       navigation.navigate('Login');
     } else {
       alert('Erro: ' + res.message);
@@ -33,7 +34,16 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const styles = ScaledSheet.create({
-    container: { flex: 1, backgroundColor: colors.bg, padding: '24@ms', justifyContent: 'center' },
+    container: { 
+      flex: 1, 
+      backgroundColor: colors.bg, 
+      padding: '24@ms', 
+      justifyContent: 'center',
+      ...Platform.select({
+        web: { height: '100vh', minHeight: '100vh' },
+        default: {},
+      }),
+    },
     title: { fontSize: '32@ms', fontWeight: '800', color: colors.text, marginBottom: '8@vs' },
     subtitle: { fontSize: '16@ms', color: colors.textSub, marginBottom: '40@vs' },
     input: {
@@ -82,13 +92,10 @@ export default function RegisterScreen({ navigation }) {
         keyboardType="email-address"
       />
       
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        placeholderTextColor={colors.textMuted}
+      <PasswordInput
         value={senha}
         onChangeText={setSenha}
-        secureTextEntry
+        placeholder="Senha"
       />
 
       <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
@@ -97,7 +104,7 @@ export default function RegisterScreen({ navigation }) {
 
       <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Login')}>
         <Text style={styles.linkText}>
-          Já tem uma conta? <Text style={styles.linkHighlight}>Faça login</Text>
+          Ja tem uma conta? <Text style={styles.linkHighlight}>Faca login</Text>
         </Text>
       </TouchableOpacity>
     </View>

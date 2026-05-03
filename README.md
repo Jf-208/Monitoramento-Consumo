@@ -20,9 +20,9 @@ O frontend foi estruturado com base no **Atomic Design**, garantindo a reutiliza
 ### Principais Pastas e Arquivos:
 
 * **`src/components/` (Interface Visual)**
-  * **`basic/`:** Componentes fundamentais que não podem ser divididos. Exemplos: `Chip.js` (rótulos visuais), botões padronizados e inputs. **Motivo:** Garantir que todos os botões e formulários do app tenham a mesma identidade visual, facilitando a manutenção em um único lugar.
-  * **`intermediate/`:** Junção de componentes básicos. Exemplo: Cartões de consumo que juntam um ícone, um texto e um valor.
-  * **`layout/`:** Estruturas maiores da interface. Exemplo: `FAB.js` (Botão Flutuante) e cabeçalhos.
+  * **`basic/`:** Componentes fundamentais que nao podem ser divididos. Exemplos: `Chip.js` (rotulos visuais com indicadores coloridos).
+  * **`intermediate/`:** Juncao de componentes basicos. Exemplo: `StatBar.js` (barra de progresso de consumo com label e valor).
+  * **`layout/`:** Estruturas maiores da interface. `FAB.js` (Botao Flutuante de navegacao rapida), `BottomNav.js` (barra inferior), `ScreenScrollView.js` (wrapper de scroll cross-platform que resolve scroll no Android via `nestedScrollEnabled` e na Web via `overflow:auto` + `height:100vh`).
 
 * **`src/screens/` (Telas da Aplicação)**
   * **`Login` e `Register`:** Telas de autenticação inicial. Realizam a validação dos campos no celular antes de enviar qualquer requisição pesada para o servidor.
@@ -35,12 +35,16 @@ O frontend foi estruturado com base no **Atomic Design**, garantindo a reutiliza
   * **`MainTabs.js`:** Configuração do menu inferior (Bottom Tab Navigation). **Motivo:** Proporciona uma navegação fluida entre Água, Energia e Dicas sem recarregar a tela inteira.
 
 * **`src/contexts/` (Gerenciamento de Estado Global)**
-  * **`AuthContext.js`:** Gerencia as informações do usuário logado. **Motivo:** Evita a necessidade de buscar os dados do usuário no banco local toda vez que ele troca de tela, mantendo a sessão ativa na memória do app.
-  * **`ThemeContext.js`:** Controla as cores do aplicativo (Tema Claro/Escuro). **Motivo:** Permite que todas as telas puxem as cores dinamicamente desse arquivo. Se o tema for alterado, o app inteiro muda as cores instantaneamente sem travamentos.
+  * **`AuthContext.js`:** Gerencia as informacoes do usuario logado. Mantem a sessao ativa na memoria do app sem buscar dados do banco toda vez que troca de tela.
+  * **`ThemeContext.js`:** Controla as cores do aplicativo (Tema Claro/Escuro). Todas as telas puxam cores dinamicamente desse contexto.
+  * **`ConsumptionContext.js`:** Gerencia dados de consumo (sliders de agua/energia), persiste valores no AsyncStorage e integra com o backend Railway para registro e busca de consumos reais.
 
-* **`src/services/api.js` (Comunicação com a Nuvem)**
-  * Arquivo único para lidar com requisições HTTP utilizando o `fetch` nativo.
-  * **Motivo:** Centraliza a configuração do servidor. Se precisarmos mudar o endereço da API do `localhost` para o Railway na nuvem, basta alterar a variável `BASE_URL` neste único arquivo. Além disso, padroniza a captura de erros para evitar fechamentos inesperados do app.
+* **`src/services/api.js` (Comunicacao com a Nuvem)**
+  * Arquivo unico para lidar com requisicoes HTTP utilizando o `fetch` nativo.
+  * Centraliza a configuracao do servidor. A variavel `BASE_URL` controla se a API aponta para localhost (desenvolvimento) ou Railway (producao).
+
+* **`src/styles/screensStyles.js` (Estilos centralizados)**
+  * Funcoes geradoras de estilo por tela (getHomeStyles, getAguaStyles, etc). Recebem o objeto `colors` do tema e retornam StyleSheet compativel.
 
 ---
 
@@ -85,7 +89,14 @@ O projeto foi configurado para ser totalmente hospedado na nuvem (Production-Rea
 * **Senhas em Hash:** Se alguém invadir o banco de dados do Supabase, não verá as senhas dos usuários, apenas um código embaralhado pelo `bcrypt`.
 * **Separação de Responsabilidades:** O React não conversa com o Banco de Dados diretamente. Ele precisa passar pelas rotas do FastAPI, que aplicam regras de segurança antes de prosseguir.
 
+## Compatibilidade Web (React Native Web)
+
+O app funciona no navegador para apresentacao academica. Solucoes aplicadas:
+* **`App.js`**: Injeta CSS global que forca `height:100%` e `background-color` nas divs do React Navigation.
+* **`ScreenScrollView.js`**: Wrapper que aplica `overflow:auto` e `height:100vh` na web, resolvendo o scroll com mouse.
+* **Telas de auth (Login/Register)**: Usam `Platform.select` com `height:100vh` para preencher a viewport.
+
 ---
 
-**Wavunder App — Monitoramento Sustentável**  
-*Desenvolvido para apresentações acadêmicas e portfólio profissional.*
+**Wavunder App — Monitoramento Sustentavel**  
+*Desenvolvido para apresentacoes academicas e portfolio profissional.*

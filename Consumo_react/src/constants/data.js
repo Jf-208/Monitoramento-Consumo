@@ -4,20 +4,20 @@
 
 import { C } from "./colors";
 
-// Itens do menu FAB (botão flutuante)
-// NAV_ITEMS: Relatórios saiu, Dicas entrou
+// Itens de navegacao inferior
+// NAV_ITEMS: Relatorios saiu, Dicas entrou
 export const NAV_ITEMS = [
-  { id: "home", label: "Início", icon: "⊞" },
-  { id: "dicas", label: "Dicas", icon: "🌿" },
-  { id: "perfil", label: "Perfil", icon: "◯" },
+  { id: "home", label: "Inicio", icon: "home" },
+  { id: "dicas", label: "Dicas", icon: "bulb" },
+  { id: "perfil", label: "Perfil", icon: "person-circle" },
 ];
 
-// FAB_ITEMS: continua igual (Relatórios fica aqui)
+// FAB_ITEMS: itens do botao flutuante
 export const FAB_ITEMS = [
-  { id: "agua", icon: "💧", label: "Água", color: "#5BBFFF" },
-  { id: "energia", icon: "⚡", label: "Energia", color: "#F0A500" },
-  { id: "dicas", icon: "🌿", label: "Dicas", color: "#2EDCB0" },
-  { id: "relatorios", icon: "📊", label: "Relatórios", color: "#A78BFA" },
+  { id: "agua", icon: "water", label: "Agua", color: "#5BBFFF" },
+  { id: "energia", icon: "flash", label: "Energia", color: "#F0A500" },
+  { id: "dicas", icon: "bulb", label: "Dicas", color: "#2EDCB0" },
+  { id: "relatorios", icon: "bar-chart", label: "Relatorios", color: "#A78BFA" },
 ];
 
 // Lista de aparelhos para a calculadora de energia
@@ -36,132 +36,27 @@ export const OUTROS_CONSUMOS = [
   { icon: "Lightbulb", label: "Iluminação", value: "1.2 kWh", percent: 5 },
 ];
 
-// Dicas sustentáveis expandidas (15 dicas completas)
+// Dicas sustentaveis — 18 dicas com fontes reais (ANEEL, SNIS, ANA, Procel)
+// O campo 'icon' usa nomes Ionicons para @expo/vector-icons
 export const DICAS = [
-  // ALERTA (mostrado primeiro se consumo alto)
-  {
-    icon: "🚀",
-    title: "⚠️ ALERTA: Consumo Alto!",
-    desc: "Seu consumo está acima da média. Reduza banhos para 5min e desligue aparelhos desnecessários.",
-    cor: C.danger,
-    categoria: "alerta",
-    prioridade: "maxima",
-  },
-  // DICAS ÁGUA
-  {
-    icon: "🚿",
-    title: "Banhos curtos",
-    desc: "Banhos de até 5 min economizam até 60% da água",
-    cor: C.blue,
-    categoria: "agua",
-    prioridade: "alta",
-  },
-  {
-    icon: "🚰",
-    title: "Vazamentos",
-    desc: "Uma torneira gotejando desperdiça 46L por dia! Verifique regularmente",
-    cor: C.blue,
-    categoria: "agua",
-    prioridade: "alta",
-  },
-  {
-    icon: "🧴",
-    title: "Lavar louça",
-    desc: "Encher a pia economiza mais água que lavar com torneira aberta",
-    cor: C.blue,
-    categoria: "agua",
-    prioridade: "media",
-  },
-  {
-    icon: "🪴",
-    title: "Rega inteligente",
-    desc: "Regar no início da manhã reduz evaporação em 30%",
-    cor: C.teal,
-    categoria: "agua",
-    prioridade: "baja",
-  },
-  {
-    icon: "🧊",
-    title: "Água da chuva",
-    desc: "Coletar água da chuva economiza até 50% da conta mensal",
-    cor: C.blue,
-    categoria: "agua",
-    prioridade: "media",
-  },
-  // DICAS ENERGIA
-  {
-    icon: "🔌",
-    title: "Tirar da tomada",
-    desc: "Desligar aparelhos em stand-by reduz até 12% no consumo",
-    cor: C.gold,
-    categoria: "energia",
-    prioridade: "alta",
-  },
-  {
-    icon: "💡",
-    title: "Lâmpadas LED",
-    desc: "Consomem até 80% menos energia que as incandescentes",
-    cor: C.teal,
-    categoria: "energia",
-    prioridade: "media",
-  },
-  {
-    icon: "🌡️",
-    title: "Ar-condicionado",
-    desc: "Manter a 23°C reduz em 10% o consumo elétrico",
-    cor: C.violet,
-    categoria: "energia",
-    prioridade: "media",
-  },
-  {
-    icon: "❄️",
-    title: "Geladeira limpa",
-    desc: "Limpar serpentinas reduz em 25% o consumo de energia",
-    cor: C.gold,
-    categoria: "energia",
-    prioridade: "baja",
-  },
-  {
-    icon: "🌙",
-    title: "Modo noturno",
-    desc: "Usar modo noturno em dispositivos economiza até 15% de bateria",
-    cor: C.gold,
-    categoria: "energia",
-    prioridade: "baja",
-  },
-  {
-    icon: "📺",
-    title: "TV e eletrônicos",
-    desc: "Desligar completamente (não stand-by) economiza até 8% mensalmente",
-    cor: C.gold,
-    categoria: "energia",
-    prioridade: "media",
-  },
-  // DICAS GERAIS
-  {
-    icon: "🫙",
-    title: "Reúso de água",
-    desc: "Água do enxágue pode ser reaproveitada para limpeza",
-    cor: C.teal,
-    categoria: "geral",
-    prioridade: "media",
-  },
-  {
-    icon: "🧺",
-    title: "Máquina cheia",
-    desc: "Usar máquina de lavar com carga completa economiza água e energia",
-    cor: C.teal,
-    categoria: "geral",
-    prioridade: "media",
-  },
-  {
-    icon: "🚿",
-    title: "Chuveiro econômico",
-    desc: "Instalar redutor de vazão economiza 30% com conforto mantido",
-    cor: C.blue,
-    categoria: "agua",
-    prioridade: "alta",
-  },
+  { id: 1, icon: 'water', categoria: 'agua', cor: '#378ADD', title: 'Banho de 5 minutos economiza 45 litros', desc: 'Um banho de 5 min com chuveiro eletrico usa 45L. Reduzir de 15 para 5 min poupa 90L por dia. Fonte: SNIS 2022.', fonte: 'SNIS' },
+  { id: 2, icon: 'flash', categoria: 'energia', cor: '#EF9F27', title: 'Chuveiro eletrico = 25% da conta de luz', desc: 'Responsavel por ate 25% do consumo residencial de energia. Prefira banhos curtos ou aquecedor solar. Fonte: ANEEL.', fonte: 'ANEEL' },
+  { id: 3, icon: 'leaf', categoria: 'agua', cor: '#1D9E75', title: 'Torneira aberta: 12 litros por minuto', desc: 'Fechar durante a escovacao economiza 24L por vez — 720L por mes. Fonte: ANA.', fonte: 'ANA' },
+  { id: 4, icon: 'bulb', categoria: 'energia', cor: '#EF9F27', title: 'LED gasta 80% menos que incandescente', desc: 'LED de 9W substitui incandescente de 60W. Economia de ~1,6 kWh por lampada/mes. Fonte: Procel.', fonte: 'Procel' },
+  { id: 5, icon: 'water', categoria: 'agua', cor: '#378ADD', title: 'Descarga dupla economiza 50%', desc: 'Acionamento duplo usa 3L ou 6L contra 9L do convencional. Retorno em menos de 2 anos. Fonte: ANA.', fonte: 'ANA' },
+  { id: 6, icon: 'flash', categoria: 'vampiro', cor: '#A32D2D', title: 'Consumo fantasma: ate 12% da conta', desc: 'Aparelhos em standby consomem entre 5% e 12% da energia residencial. Desligue da tomada. Fonte: ANEEL.', fonte: 'ANEEL' },
+  { id: 7, icon: 'thermometer', categoria: 'energia', cor: '#EF9F27', title: 'Geladeira ideal: 3 a 5 graus', desc: 'Cada grau abaixo do necessario aumenta consumo em ~5%. Nao coloque alimentos quentes. Fonte: Procel.', fonte: 'Procel' },
+  { id: 8, icon: 'water', categoria: 'agua', cor: '#378ADD', title: 'Maquina de lavar: capacidade maxima', desc: 'Meia carga usa quase a mesma agua que carga completa (~120L). Junte roupas. Fonte: SNIS.', fonte: 'SNIS' },
+  { id: 9, icon: 'sunny', categoria: 'energia', cor: '#EF9F27', title: 'Energia solar: payback de 4 a 6 anos', desc: 'Sistemas solares residenciais tem retorno entre 4 e 6 anos, com vida util de 25+ anos. Fonte: ANEEL.', fonte: 'ANEEL' },
+  { id: 10, icon: 'leaf', categoria: 'agua', cor: '#1D9E75', title: 'Reaproveitamento de agua da chuva', desc: 'Captacao pluvial para irrigacao e descarga reduz consumo de agua tratada em ate 40%. Fonte: ANA.', fonte: 'ANA' },
+  { id: 11, icon: 'flash', categoria: 'energia', cor: '#EF9F27', title: 'Ar-condicionado: 22C usa 30% mais que 24C', desc: 'Cada grau abaixo de 24C consome ~8-10% mais energia. Preferir 24C no verao. Fonte: Procel.', fonte: 'Procel' },
+  { id: 12, icon: 'water', categoria: 'agua', cor: '#378ADD', title: 'Vazamentos: 1 gota/seg = 46L/dia', desc: 'Torneira pingando desperdica ~46L por dia. Trocar vedacoes e simples e barato. Fonte: ANA.', fonte: 'ANA' },
+  { id: 13, icon: 'flash', categoria: 'vampiro', cor: '#A32D2D', title: 'Videogame em standby consome sem parar', desc: 'Console moderno em standby pode consumir ate 8W constantemente. Em um mes, ~5,8 kWh desperdicados.', fonte: 'Procel' },
+  { id: 14, icon: 'leaf', categoria: 'agua', cor: '#1D9E75', title: 'Irrigacao: regar no horario certo', desc: 'Regar entre 6h-8h ou apos 17h reduz evaporacao em ate 60% comparado ao pico. Fonte: EMBRAPA.', fonte: 'EMBRAPA' },
+  { id: 15, icon: 'flash', categoria: 'energia', cor: '#EF9F27', title: 'Ferro de passar: use a potencia certa', desc: 'Passar roupas delicadas com menor temperatura e pesadas no fim economiza ate 20%. Fonte: Procel.', fonte: 'Procel' },
+  { id: 16, icon: 'water', categoria: 'agua', cor: '#378ADD', title: 'Lavar calcadas com vassoura', desc: 'Mangueira usa ate 280L de agua em 50m2 de calcada. Vassoura usa zero. Fonte: ANA.', fonte: 'ANA' },
+  { id: 17, icon: 'bulb', categoria: 'energia', cor: '#EF9F27', title: 'Sensores de presenca reduzem 30%', desc: 'Em areas de circulacao, sensores evitam luz ligada sem necessidade. Payback em menos de 1 ano. Fonte: Procel.', fonte: 'Procel' },
+  { id: 18, icon: 'water', categoria: 'alerta', cor: '#E24B4A', title: 'Brasil desperdica 38% da agua tratada', desc: 'O pais perde 38,3% da agua tratada antes de chegar as torneiras — por vazamentos em redes antigas. Fonte: SNIS 2022.', fonte: 'SNIS 2022' },
 ];
 
 // Dados do gráfico semanal

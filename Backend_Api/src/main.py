@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.database.connection import criar_tabelas
 from src.routes.v1.auth_routes import auth_router
+from src.routes.v1.consumo_routes import consumo_router
 
 # Ciclo de vida da aplicação
 @asynccontextmanager
@@ -30,7 +31,8 @@ app.add_middleware(
 def health_check():
     return {"status": "API em Português no ar!"}
 
-# Incluindo a rota de autenticação (adicione as outras aqui futuramente)
+# Incluindo as rotas de autenticação e consumo
 app.include_router(auth_router)
+app.include_router(consumo_router)
 
 # Comando para rodar: uvicorn src.main:app --reload
