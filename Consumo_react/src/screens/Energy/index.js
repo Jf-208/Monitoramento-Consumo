@@ -13,6 +13,7 @@ import { ThemeContext } from '../../contexts/ThemeContext';
 import { ConsumptionContext } from '../../contexts/ConsumptionContext';
 import { getEnergiaStyles } from '../../styles/screensStyles';
 import ScreenScrollView from '../../components/layout/ScreenScrollView';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function EnergiaScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
@@ -83,7 +84,7 @@ export default function EnergiaScreen({ navigation }) {
       >
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={{ color: colors.textSub, fontSize: 18 }}>←</Text>
+          <Ionicons name="arrow-back" size={18} color={colors.textSub} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Energia</Text>
       </View>

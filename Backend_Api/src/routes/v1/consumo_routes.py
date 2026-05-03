@@ -69,56 +69,59 @@ def registrar_consumo(dados: ConsumoRegistrar, db: Session = Depends(get_db)):
 @consumo_router.get("/semanal/{id_usuario}")
 def consumo_semanal(id_usuario: int, db: Session = Depends(get_db)):
     """
-    Retorna os consumos dos últimos 7 dias agrupados por dia.
-    Usado pelo gráfico de barras empilhadas na tela de Relatórios.
-    Retorna arrays com 7 posições (Seg a Dom) para cada categoria.
+    Retorna os consumos dos ultimos 7 dias agrupados por data real.
+    Gera labels dinamicos (Hoje, Ontem, dia da semana).
     """
-    # Calcula o início da janela de 7 dias
     agora = datetime.now(timezone.utc)
-    sete_dias_atras = agora - timedelta(days=7)
 
-    # Busca registros dos últimos 7 dias deste usuário
+    # Gerar os ultimos 7 dias em ordem (mais antigo primeiro)
+    dias_range = [(agora - timedelta(days=i)).date() for i in range(6, -1, -1)]
+
+    sete_dias_atras = datetime.combine(dias_range[0], datetime.min.time()).replace(tzinfo=timezone.utc)
+
     registros = (
         db.query(Consumo)
-        .filter(
-            Consumo.id_usuario == id_usuario,
-            Consumo.data_registro >= sete_dias_atras,
-        )
+        .filter(Consumo.id_usuario == id_usuario, Consumo.data_registro >= sete_dias_atras)
         .all()
     )
 
-    # Inicializa estrutura de 7 dias com zeros
-    dias_labels = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
-    agua    = [0.0] * 7
-    energia = [0.0] * 7
-    vampiro = [0.0] * 7
+    # Mapear por data real
+    agua    = {d: 0.0 for d in dias_range}
+    energia = {d: 0.0 for d in dias_range}
+    vampiro = {d: 0.0 for d in dias_range}
 
-    # Agrupa cada registro no dia correto da semana (0=Seg ... 6=Dom)
     for r in registros:
         data = r.data_registro
         if data.tzinfo is None:
             data = data.replace(tzinfo=timezone.utc)
-        # weekday(): 0=Segunda, 6=Domingo
-        idx = data.weekday()
-        valor = float(r.valor)
+        dia = data.date()
+        if dia in agua:
+            if r.tipo_consumo == "agua":
+                agua[dia] += float(r.valor)
+            elif r.tipo_consumo == "energia":
+                energia[dia] += float(r.valor)
+            elif r.tipo_consumo == "vampiro":
+                vampiro[dia] += float(r.valor)
 
-        if r.tipo_consumo == "agua":
-            agua[idx] += valor
-        elif r.tipo_consumo == "energia":
-            energia[idx] += valor
-        elif r.tipo_consumo == "vampiro":
-            vampiro[idx] += valor
+    # Labels dinamicos (hoje, ontem, dias da semana)
+    nomes_pt = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"]
+    hoje = agora.date()
+    ontem = hoje - timedelta(days=1)
 
-    # Arredonda para 2 casas decimais
-    agua    = [round(v, 2) for v in agua]
-    energia = [round(v, 4) for v in energia]
-    vampiro = [round(v, 4) for v in vampiro]
+    def label_dia(d):
+        if d == hoje:
+            return "Hoje"
+        if d == ontem:
+            return "Ontem"
+        return nomes_pt[d.weekday()]
+
+    labels = [label_dia(d) for d in dias_range]
 
     return {
-        "dias": dias_labels,
-        "agua": agua,
-        "energia": energia,
-        "vampiro": vampiro,
+        "dias":    labels,
+        "agua":    [round(agua[d], 2)    for d in dias_range],
+        "energia": [round(energia[d], 4) for d in dias_range],
+        "vampiro": [round(vampiro[d], 4) for d in dias_range],
     }
 
 

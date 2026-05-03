@@ -1,12 +1,13 @@
 // Login/index.js
-// Tela inicial de Autenticação.
-// Permite que usuários existentes entrem na plataforma informando e-mail e senha.
-// Se o login for bem-sucedido, o AuthContext atualiza o estado global e redireciona para o Dashboard.
+// Tela inicial de Autenticacao.
+// Permite que usuarios existentes entrem informando e-mail e senha.
+// Usa PasswordInput com toggle de visibilidade (eye icon).
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Platform, Image } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
 import { AuthContext } from '../../contexts/AuthContext';
 import { ThemeContext } from '../../contexts/ThemeContext';
+import PasswordInput from '../../components/basic/PasswordInput';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -22,7 +23,6 @@ export default function LoginScreen({ navigation }) {
     const res = await login(email, senha);
     setLoading(false);
     if (!res.success) {
-      // Usando alert nativo que funciona 100% dos navegadores web
       alert('Erro: ' + res.message);
     }
   };
@@ -38,8 +38,8 @@ export default function LoginScreen({ navigation }) {
         default: {},
       }),
     },
-    title: { fontSize: '32@ms', fontWeight: '800', color: colors.text, marginBottom: '8@vs', fontFamily: 'Sora-Bold' },
-    subtitle: { fontSize: '16@ms', color: colors.textSub, marginBottom: '40@vs' },
+    title: { fontSize: '32@ms', fontWeight: '800', color: colors.text, marginBottom: '8@vs', textAlign: 'center' },
+    subtitle: { fontSize: '16@ms', color: colors.textSub, marginBottom: '40@vs', textAlign: 'center' },
     input: {
       backgroundColor: colors.surface,
       borderWidth: 1,
@@ -65,8 +65,17 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* Logo centralizada */}
+      <View style={{ alignItems: 'center', marginBottom: 32, marginTop: Platform.select({ web: 40, default: 20 }) }}>
+        <Image
+          source={require('../../../assets/icon.png')}
+          style={{ width: 100, height: 100, borderRadius: 24 }}
+          resizeMode="contain"
+        />
+      </View>
+
       <Text style={styles.title}>Bem-vindo</Text>
-      <Text style={styles.subtitle}>Faça login para continuar</Text>
+      <Text style={styles.subtitle}>Faca login para continuar</Text>
 
       <TextInput
         style={styles.input}
@@ -78,13 +87,10 @@ export default function LoginScreen({ navigation }) {
         keyboardType="email-address"
       />
       
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        placeholderTextColor={colors.textMuted}
+      <PasswordInput
         value={senha}
         onChangeText={setSenha}
-        secureTextEntry
+        placeholder="Senha"
       />
 
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
@@ -97,7 +103,7 @@ export default function LoginScreen({ navigation }) {
 
       <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Register')}>
         <Text style={styles.linkText}>
-          Não tem uma conta? <Text style={styles.linkHighlight}>Cadastre-se</Text>
+          Nao tem uma conta? <Text style={styles.linkHighlight}>Cadastre-se</Text>
         </Text>
       </TouchableOpacity>
     </View>

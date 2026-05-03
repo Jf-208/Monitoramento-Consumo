@@ -15,6 +15,8 @@ import {
 } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
 import { ThemeContext } from '../../contexts/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
+import { MotiView } from 'moti';
 
 export default function FAB({ navigation }) {
   const [open, setOpen] = useState(false); // Controla se o menu está expandido
@@ -22,9 +24,9 @@ export default function FAB({ navigation }) {
 
   // Itens do menu — cada um navega para uma tela via Stack Navigator
   const items = [
-    { id: 'Water',  icon: 'A', label: 'Agua',    color: colors.blue },
-    { id: 'Energy', icon: 'E', label: 'Energia', color: colors.gold },
-    { id: 'Tips',   icon: 'D', label: 'Dicas',   color: colors.teal },
+    { id: 'Water',  icon: 'water', label: 'Agua',    color: colors.blue },
+    { id: 'Energy', icon: 'flash', label: 'Energia', color: colors.gold },
+    { id: 'Tips',   icon: 'bulb',  label: 'Dicas',   color: colors.teal },
   ];
 
   const handleSelect = (screenId) => {
@@ -32,9 +34,7 @@ export default function FAB({ navigation }) {
     navigation.navigate(screenId);
   };
 
-  // Posição do topo: considera a StatusBar do Android para alinhar com o spacerHeader
-  const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0;
-  const menuTop = statusBarHeight + 8;
+  const menuBottom = 60;
 
   const styles = ScaledSheet.create({
     // Wrapper do botão principal — pointerEvents="box-none" é CRÍTICO:
@@ -71,10 +71,9 @@ export default function FAB({ navigation }) {
     // alinhado com o botão do FAB
     menuContainer: {
       position: 'absolute',
-      top: menuTop,
-      right: '20@s',
-      alignItems: 'flex-end',
-      // SEM zIndex — dentro do Modal não é necessário e pode causar problemas
+      bottom: menuBottom,
+      alignSelf: 'center',
+      alignItems: 'center',
     },
 
     // Botão de fechar (×) dentro do Modal — substitui visualmente o "+"
@@ -159,22 +158,28 @@ export default function FAB({ navigation }) {
             <Text style={[styles.fabText, { transform: [{ rotate: '45deg' }] }]}>+</Text>
           </TouchableOpacity>
 
-          {/* Itens de navegação */}
-          {items.map((item) => (
-            <View key={item.id} style={styles.menuItem}>
-              <View style={styles.menuLabel}>
-                <Text style={[styles.menuLabelText, { color: item.color }]}>
-                  {item.label}
-                </Text>
+          {items.map((item, index) => (
+            <MotiView
+              key={item.id}
+              from={{ opacity: 0, translateY: 20 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: 'timing', duration: 250, delay: index * 80 }}
+            >
+              <View style={styles.menuItem}>
+                <View style={styles.menuLabel}>
+                  <Text style={[styles.menuLabelText, { color: item.color }]}>
+                    {item.label}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.menuIconBtn, { borderColor: item.color + '55' }]}
+                  onPress={() => handleSelect(item.id)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name={item.icon} size={20} color={item.color} />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={[styles.menuIconBtn, { borderColor: item.color + '55' }]}
-                onPress={() => handleSelect(item.id)}
-                activeOpacity={0.8}
-              >
-                <Text style={{ fontSize: 20 }}>{item.icon}</Text>
-              </TouchableOpacity>
-            </View>
+            </MotiView>
           ))}
 
         </View>

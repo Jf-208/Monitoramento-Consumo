@@ -132,6 +132,9 @@ export const ConsumptionProvider = ({ children }) => {
         energiaPoupadaReal: dados.energia_poupada_kWh || 0,
         metaAguaL:          dados.meta_agua_L         || 700,
         metaEnergiaKwh:     dados.meta_energia_kWh    || 15,
+        percentualAgua:     dados.percentual_agua     || 0,
+        percentualEnergia:  dados.percentual_energia  || 0,
+        percentualVampiro:  dados.percentual_outros   || 0,
       });
     } catch (error) {
       // Se falhar, mantém os dados anteriores sem quebrar o app

@@ -12,6 +12,7 @@ import { ThemeContext } from '../../contexts/ThemeContext';
 import { ConsumptionContext } from '../../contexts/ConsumptionContext';
 import { getAguaStyles } from '../../styles/screensStyles';
 import ScreenScrollView from '../../components/layout/ScreenScrollView';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function AguaScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
@@ -67,7 +68,7 @@ export default function AguaScreen({ navigation }) {
       >
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={{ color: colors.textSub, fontSize: 18 }}>←</Text>
+          <Ionicons name="arrow-back" size={18} color={colors.textSub} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Agua</Text>
       </View>

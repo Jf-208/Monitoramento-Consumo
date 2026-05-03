@@ -9,6 +9,7 @@ import { ScaledSheet } from 'react-native-size-matters';
 import { ThemeContext } from '../../contexts/ThemeContext';
 import { FAQ_AJUDA } from '../../constants/data';
 import ScreenScrollView from '../../components/layout/ScreenScrollView';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function AjudaScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
@@ -37,7 +38,7 @@ export default function AjudaScreen({ navigation }) {
         {/* Header com botão voltar */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Text style={{ color: colors.textSub, fontSize: 18 }}>←</Text>
+            <Ionicons name="arrow-back" size={18} color={colors.textSub} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Ajuda e FAQ</Text>
         </View>

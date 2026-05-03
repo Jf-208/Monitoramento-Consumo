@@ -8,6 +8,7 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet,
 import { ThemeContext } from '../../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenScrollView from '../../components/layout/ScreenScrollView';
+import PasswordInput from '../../components/basic/PasswordInput';
 import api from '../../services/api';
 
 export default function EsqueciSenhaScreen({ navigation }) {
@@ -161,13 +162,10 @@ export default function EsqueciSenhaScreen({ navigation }) {
               maxLength={6}
             />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Nova Senha"
-              placeholderTextColor={colors.textMuted}
+            <PasswordInput
               value={novaSenha}
               onChangeText={setNovaSenha}
-              secureTextEntry
+              placeholder="Nova Senha"
             />
 
             <TouchableOpacity style={styles.button} onPress={handleRedefinir} disabled={loading}>
@@ -181,7 +179,7 @@ export default function EsqueciSenhaScreen({ navigation }) {
         )}
 
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>← Voltar ao <Text style={styles.backHighlight}>Login</Text></Text>
+          <Text style={styles.backText}>Voltar ao <Text style={styles.backHighlight}>Login</Text></Text>
         </TouchableOpacity>
       </ScreenScrollView>
     </SafeAreaView>
