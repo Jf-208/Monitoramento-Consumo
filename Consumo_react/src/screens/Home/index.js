@@ -88,7 +88,7 @@ export default function HomeScreen({ navigation }) {
     >
       <View style={{ alignItems: 'center', marginBottom: 16, marginTop: 8, marginLeft: -15 }}>
         <Image
-          source={require('../../../assets/Wave.png')}
+          source={require('../../../assets/Wave2.png')}
           style={{ width: 220, height: 100 }}
           resizeMode="contain"
         />

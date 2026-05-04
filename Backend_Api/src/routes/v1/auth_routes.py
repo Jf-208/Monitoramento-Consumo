@@ -34,12 +34,19 @@ class LoginCriar(BaseModel):
 @auth_router.post('/login')
 def login(dados: LoginCriar, db: Session = Depends(get_db)):
     usuario = db.query(Usuario).filter(Usuario.email == dados.email).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")
     
-    # Vê se o tempero bate
+    # SEGURANCA: Sempre retornar o mesmo erro, independente se foi email ou senha
+    # Isso evita "user enumeration" — atacante nao consegue saber qual campo esta errado
+    ERRO_GENERICO = HTTPException(
+        status_code=401,
+        detail="E-mail ou senha invalidos"
+    )
+    
+    if not usuario:
+        raise ERRO_GENERICO
+    
     if not verificar_senha(dados.senha, usuario.senha):
-        raise HTTPException(status_code=401, detail="Senha incorreta")
+        raise ERRO_GENERICO
     
     return {
         "message": "Login realizado com sucesso!",

@@ -1,7 +1,9 @@
 // EsqueciSenhaScreen.js
-// Tela de recuperação de senha em 2 etapas:
-//   Etapa 1: Usuário digita o e-mail → recebe código de 6 dígitos
-//   Etapa 2: Usuário digita o código + nova senha → senha redefinida
+// Tela de recuperacao de senha em 2 etapas:
+//   Etapa 1: Usuario digita o e-mail -> recebe codigo de 6 digitos
+//   Etapa 2: Usuario digita o codigo + nova senha -> senha redefinida
+// Feedback via InlineMessage (sem alert nativo).
+// Seguranca: nao confirma se o email existe ou nao.
 
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, Platform } from 'react-native';
@@ -9,58 +11,78 @@ import { ThemeContext } from '../../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenScrollView from '../../components/layout/ScreenScrollView';
 import PasswordInput from '../../components/basic/PasswordInput';
+import InlineMessage from '../../components/basic/InlineMessage';
 import api from '../../services/api';
 
 export default function EsqueciSenhaScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
 
   // Controle de etapas
-  const [etapa, setEtapa] = useState(1); // 1 = digitar email, 2 = digitar código + nova senha
+  const [etapa, setEtapa] = useState(1); // 1 = digitar email, 2 = digitar codigo + nova senha
   const [loading, setLoading] = useState(false);
+  const [mensagem, setMensagem] = useState(null); // { tipo, texto }
 
   // Campos
   const [email, setEmail] = useState('');
   const [codigo, setCodigo] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
 
-  // ETAPA 1: Enviar código para o e-mail
+  // ETAPA 1: Enviar codigo para o e-mail
   const handleEnviarCodigo = async () => {
-    if (!email) {
-      alert('Digite seu e-mail!');
+    setMensagem(null);
+
+    if (!email.trim() || !email.includes('@')) {
+      setMensagem({ tipo: 'aviso', texto: 'Informe um e-mail válido.' });
       return;
     }
+
     setLoading(true);
     try {
-      const res = await api.post('/auth/esqueci-senha', { email });
-      alert('Sucesso: ' + res.data.message);
-      setEtapa(2); // Avança para a etapa 2
+      await api.post('/auth/esqueci-senha', { email: email.trim().toLowerCase() });
+      setMensagem({ tipo: 'sucesso', texto: 'Código enviado! Verifique sua caixa de entrada.' });
+      setTimeout(() => setEtapa(2), 1200);
     } catch (error) {
-      alert('Erro: ' + (error.response?.data?.detail || 'Erro ao enviar código'));
+      // Mensagem generica — nao confirma se o email existe
+      setMensagem({
+        tipo:  'info',
+        texto: 'Se este e-mail estiver cadastrado, você receberá o código em breve.',
+      });
+      // Avanca para etapa 2 de qualquer forma (seguranca: nao confirma se email existe)
+      setTimeout(() => setEtapa(2), 2000);
     }
     setLoading(false);
   };
 
-  // ETAPA 2: Verificar código e redefinir senha
+  // ETAPA 2: Verificar codigo e redefinir senha
   const handleRedefinir = async () => {
-    if (!codigo || !novaSenha) {
-      alert('Preencha todos os campos!');
+    setMensagem(null);
+
+    if (!codigo || codigo.length !== 6) {
+      setMensagem({ tipo: 'aviso', texto: 'Digite o código de 6 dígitos recebido no e-mail.' });
       return;
     }
-    if (novaSenha.length < 4) {
-      alert('A nova senha deve ter pelo menos 4 caracteres!');
+    if (!novaSenha || novaSenha.length < 4) {
+      setMensagem({ tipo: 'aviso', texto: 'A nova senha deve ter pelo menos 4 caracteres.' });
       return;
     }
+
     setLoading(true);
     try {
-      const res = await api.post('/auth/verificar-codigo', {
-        email,
+      await api.post('/auth/verificar-codigo', {
+        email:     email.trim().toLowerCase(),
         codigo,
         nova_senha: novaSenha,
       });
-      alert('Sucesso: ' + res.data.message);
-      navigation.navigate('Login'); // Volta para o login
+      setMensagem({ tipo: 'sucesso', texto: 'Senha redefinida! Redirecionando para o login...' });
+      setTimeout(() => navigation.navigate('Login'), 2000);
     } catch (error) {
-      alert('Erro: ' + (error.response?.data?.detail || 'Erro ao redefinir senha'));
+      const detalhe = error?.response?.data?.detail || '';
+      const msgErro = detalhe.includes('expirado')
+        ? 'Código expirado. Solicite um novo código.'
+        : detalhe.includes('inválido') || detalhe.includes('invalido')
+        ? 'Código incorreto. Verifique e tente novamente.'
+        : 'Erro ao redefinir senha. Tente novamente.';
+      setMensagem({ tipo: 'erro', texto: msgErro });
     }
     setLoading(false);
   };
@@ -71,7 +93,7 @@ export default function EsqueciSenhaScreen({ navigation }) {
       backgroundColor: colors.bg,
       padding: 24,
       justifyContent: 'center',
-      // FIX WEB: sem height explícito, o container não preenche a tela na web
+      // FIX WEB: sem height explicito, o container nao preenche a tela na web
       ...Platform.select({
         web: { height: '100vh', minHeight: '100vh' },
         default: {},
@@ -131,12 +153,17 @@ export default function EsqueciSenhaScreen({ navigation }) {
               Digite seu e-mail cadastrado. Enviaremos um código de 6 dígitos para você.
             </Text>
 
+            {/* Feedback in-app */}
+            {mensagem && (
+              <InlineMessage tipo={mensagem.tipo} mensagem={mensagem.texto} />
+            )}
+
             <TextInput
               style={styles.input}
               placeholder="E-mail"
               placeholderTextColor={colors.textMuted}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(t) => { setEmail(t); setMensagem(null); }}
               autoCapitalize="none"
               keyboardType="email-address"
             />
@@ -152,19 +179,24 @@ export default function EsqueciSenhaScreen({ navigation }) {
               Verifique seu e-mail ({email}) e digite o código de 6 dígitos abaixo.
             </Text>
 
+            {/* Feedback in-app */}
+            {mensagem && (
+              <InlineMessage tipo={mensagem.tipo} mensagem={mensagem.texto} />
+            )}
+
             <TextInput
               style={[styles.input, { textAlign: 'center', fontSize: 24, letterSpacing: 8 }]}
               placeholder="000000"
               placeholderTextColor={colors.textMuted}
               value={codigo}
-              onChangeText={setCodigo}
+              onChangeText={(t) => { setCodigo(t); setMensagem(null); }}
               keyboardType="number-pad"
               maxLength={6}
             />
 
             <PasswordInput
               value={novaSenha}
-              onChangeText={setNovaSenha}
+              onChangeText={(t) => { setNovaSenha(t); setMensagem(null); }}
               placeholder="Nova Senha"
             />
 

@@ -2,9 +2,10 @@
 // Tela de Dashboard de Energia.
 // Permite simular consumo selecionando aparelhos ou ajustando potencia/tempo.
 // Integra com o backend para registrar consumo.
+// Feedback via InlineMessage (sem alert nativo).
 
-import React, { useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import React, { useContext, useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import { verticalScale } from 'react-native-size-matters';
@@ -14,6 +15,8 @@ import { getEnergiaStyles } from '../../styles/screensStyles';
 import ScreenScrollView from '../../components/layout/ScreenScrollView';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import InlineMessage from '../../components/basic/InlineMessage';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function EnergiaScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
@@ -22,13 +25,21 @@ export default function EnergiaScreen({ navigation }) {
     energiaTempo,    setEnergiaTempo,
     salvarConsumoBackend,
     buscarResumoSemanal,
-    ultimoErroRegistro,
   } = useContext(ConsumptionContext);
 
   const styles = getEnergiaStyles(colors);
 
-  // Controle de loading
+  // Controle de loading e feedback
   const [salvando, setSalvando] = useState(false);
+  const [mensagem, setMensagem] = useState(null); // { tipo, texto }
+
+  // Limpa mensagem ao voltar para a tela
+  useFocusEffect(
+    useCallback(() => {
+      setMensagem(null);
+      setSalvando(false);
+    }, [])
+  );
 
   const kWh   = ((energiaPotencia * energiaTempo) / 60 / 1000).toFixed(2);
   const custo = (parseFloat(kWh) * 0.87).toFixed(2);
@@ -42,12 +53,13 @@ export default function EnergiaScreen({ navigation }) {
     { nome: 'PC',        w: 300,  icon: 'desktop-tower' },
   ];
 
-  // ─── Registrar consumo no backend (com tratamento robusto de erro) ─────────
+  // ─── Registrar consumo no backend (com InlineMessage) ─────────
   const handleRegistrar = async () => {
+    setMensagem(null);
     const valorKwh = parseFloat(kWh);
 
     if (valorKwh <= 0) {
-      Alert.alert('Atencao', 'Ajuste a potencia e o tempo antes de registrar.');
+      setMensagem({ tipo: 'aviso', texto: 'Ajuste a potência e o tempo antes de registrar.' });
       return;
     }
 
@@ -57,27 +69,21 @@ export default function EnergiaScreen({ navigation }) {
 
       if (resultado.success) {
         await buscarResumoSemanal();
-        Alert.alert(
-          'Registrado!',
-          `${kWh} kWh de energia registrados com sucesso.\nCusto estimado: R$ ${custo}\n\nSua Home foi atualizada!`,
-          [{ text: 'OK' }]
-        );
+        setMensagem({
+          tipo:  'sucesso',
+          texto: `${kWh} kWh registrados! Custo estimado: R$ ${custo}. Painel atualizado.`,
+        });
       } else {
-        Alert.alert(
-          'Erro ao registrar',
-          (resultado.message || 'Falha ao salvar.') + '\n\nVerifique sua conexao com a internet.',
-          [
-            { text: 'Tentar novamente', onPress: handleRegistrar },
-            { text: 'Cancelar', style: 'cancel' },
-          ]
-        );
+        setMensagem({
+          tipo:  'erro',
+          texto: 'Não foi possível registrar. Verifique sua conexão e tente novamente.',
+        });
       }
     } catch (e) {
-      Alert.alert(
-        'Sem conexao',
-        'Nao foi possivel alcancar o servidor. Verifique sua internet e tente novamente.',
-        [{ text: 'OK' }]
-      );
+      setMensagem({
+        tipo:  'erro',
+        texto: 'Sem conexão com o servidor. Verifique sua internet.',
+      });
     } finally {
       setSalvando(false);
     }
@@ -168,21 +174,10 @@ export default function EnergiaScreen({ navigation }) {
         </View>
       </View>
 
-      {/* ─── PAINEL DE DIAGNOSTICO (exibe erro do backend) ─── */}
-      {ultimoErroRegistro ? (
-        <View style={{
-          backgroundColor: '#FF000022',
-          borderColor: '#FF5A72',
-          borderWidth: 1,
-          borderRadius: 8,
-          padding: 12,
-          marginBottom: 8,
-        }}>
-          <Text style={{ color: '#FF5A72', fontSize: 12 }}>
-            ERRO: {ultimoErroRegistro}
-          </Text>
-        </View>
-      ) : null}
+      {/* ─── FEEDBACK IN-APP (substitui Alert.alert e painel de diagnostico) ─── */}
+      {mensagem && (
+        <InlineMessage tipo={mensagem.tipo} mensagem={mensagem.texto} style={{ marginTop: 8 }} />
+      )}
 
       {/* ─── BOTAO: Registrar consumo no backend ─── */}
       <TouchableOpacity

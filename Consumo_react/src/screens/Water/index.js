@@ -2,9 +2,10 @@
 // Tela de Dashboard de Agua.
 // Exibe o consumo de agua, permite simular o tempo de banho,
 // e calcula litros gastos. Integra com o backend para registrar consumo.
+// Feedback via InlineMessage (sem alert nativo).
 
-import React, { useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import React, { useContext, useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import { ThemeContext } from '../../contexts/ThemeContext';
@@ -12,6 +13,8 @@ import { ConsumptionContext } from '../../contexts/ConsumptionContext';
 import { getAguaStyles } from '../../styles/screensStyles';
 import ScreenScrollView from '../../components/layout/ScreenScrollView';
 import { Ionicons } from '@expo/vector-icons';
+import InlineMessage from '../../components/basic/InlineMessage';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function AguaScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
@@ -20,48 +23,52 @@ export default function AguaScreen({ navigation }) {
     setBanhoTempo,
     salvarConsumoBackend,
     buscarResumoSemanal,
-    ultimoErroRegistro,
   } = useContext(ConsumptionContext);
 
   const styles = getAguaStyles(colors);
 
-  // Controle de loading e erro
+  // Controle de loading e feedback
   const [salvando, setSalvando] = useState(false);
+  const [mensagem, setMensagem] = useState(null); // { tipo, texto }
+
+  // Limpa mensagem ao voltar para a tela
+  useFocusEffect(
+    useCallback(() => {
+      setMensagem(null);
+      setSalvando(false);
+    }, [])
+  );
 
   const litros  = Math.round(banhoTempo * 7);
   const economia = banhoTempo > 10
     ? `Reduzir ${banhoTempo - 10} min economiza ${(banhoTempo - 10) * 7} L`
     : 'Otimo tempo de banho!';
 
-  // ─── Registrar consumo no backend (com tratamento robusto de erro) ─────────
+  // ─── Registrar consumo no backend (com InlineMessage) ─────────
   const handleRegistrar = async () => {
+    setMensagem(null);
     setSalvando(true);
+
     try {
       const resultado = await salvarConsumoBackend('agua', litros, 'L', true);
 
       if (resultado.success) {
         await buscarResumoSemanal();
-        Alert.alert(
-          'Registrado!',
-          `${litros} L de agua foram salvos.\nSua Home foi atualizada!`,
-          [{ text: 'OK' }]
-        );
+        setMensagem({
+          tipo:  'sucesso',
+          texto: `${litros} L registrados com sucesso! Seu painel foi atualizado.`,
+        });
       } else {
-        Alert.alert(
-          'Erro ao registrar',
-          (resultado.message || 'Falha ao salvar.') + '\n\nVerifique sua conexao com a internet.',
-          [
-            { text: 'Tentar novamente', onPress: handleRegistrar },
-            { text: 'Cancelar', style: 'cancel' },
-          ]
-        );
+        setMensagem({
+          tipo:  'erro',
+          texto: 'Não foi possível registrar. Verifique sua conexão e tente novamente.',
+        });
       }
     } catch (e) {
-      Alert.alert(
-        'Sem conexao',
-        'Nao foi possivel alcancar o servidor. Verifique sua internet e tente novamente.',
-        [{ text: 'OK' }]
-      );
+      setMensagem({
+        tipo:  'erro',
+        texto: 'Sem conexão com o servidor. Verifique sua internet.',
+      });
     } finally {
       setSalvando(false);
     }
@@ -135,12 +142,10 @@ export default function AguaScreen({ navigation }) {
         </Text>
       </View>
 
-      {/* ─── PAINEL DE DIAGNOSTICO (exibe erro do backend) ─── */}
-      {ultimoErroRegistro ? (
-        <View style={{ backgroundColor: '#FF000022', borderColor: '#FF0000', borderWidth: 1, borderRadius: 8, padding: 12, marginBottom: 8 }}>
-          <Text style={{ color: '#FF5A72', fontSize: 12 }}>ERRO: {ultimoErroRegistro}</Text>
-        </View>
-      ) : null}
+      {/* ─── FEEDBACK IN-APP (substitui Alert.alert e painel de diagnostico) ─── */}
+      {mensagem && (
+        <InlineMessage tipo={mensagem.tipo} mensagem={mensagem.texto} style={{ marginTop: 8 }} />
+      )}
 
       {/* ─── BOTAO: Registrar consumo no backend ─── */}
       <TouchableOpacity
