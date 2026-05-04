@@ -10,7 +10,7 @@ const PRODUCAO_URL = 'https://monitoramento-consumo-production.up.railway.app';
 const DESENVOLVIMENTO_URL = 'http://localhost:8000';
 
 // Define qual URL usar
-const EM_PRODUCAO = true; // Producao ativada — aponta para Railway
+const EM_PRODUCAO = false; // Desenvolvimento — aponta para localhost
 const BASE_URL = EM_PRODUCAO ? PRODUCAO_URL : DESENVOLVIMENTO_URL;
 
 // Busca o token do usuario salvo no AsyncStorage
