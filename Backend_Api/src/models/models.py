@@ -22,7 +22,10 @@ class Consumo(Base):
     valor = Column(Numeric(10, 2), nullable=False)
     unidade_medida = Column(String(120), nullable=False)
     data_registro = Column(DateTime(timezone=True), server_default=func.now())
-    is_simulado = Column(Boolean, default=False)   
+    is_simulado = Column(Boolean, default=False)
+    nome_custom = Column(String(120), nullable=True)          # para tipo "outros": nome livre do consumo
+    valor_monetario = Column(Numeric(10, 2), nullable=True)   # valor em R$ (obrigatorio em "outros", opcional nos demais)
+    data_personalizada = Column(DateTime(timezone=True), nullable=True)  # data informada pelo usuario para registros retroativos
 
 
 class Meta(Base):

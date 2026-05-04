@@ -1,5 +1,5 @@
 # consumo_routes.py
-# Rotas da API responsáveis por registrar e consultar dados de consumo (água, energia, vampiro).
+# Rotas da API responsaveis por registrar e consultar dados de consumo (agua, energia, outros).
 # Todas as rotas recebem ou retornam dados em formato JSON.
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -19,12 +19,15 @@ consumo_router = APIRouter(prefix="/consumo", tags=["Consumo"])
 # ─── SCHEMAS DE ENTRADA (o que o app envia) ───────────────────────────────────
 
 class ConsumoRegistrar(BaseModel):
-    """Dados necessários para registrar um novo consumo."""
+    """Dados necessarios para registrar um novo consumo."""
     id_usuario: int
-    tipo_consumo: str          # "agua", "energia", "vampiro"
+    tipo_consumo: str          # "agua", "energia", "outros"
     valor: float
-    unidade_medida: str        # "L", "kWh"
+    unidade_medida: str        # "L", "kWh", "" (vazio para outros sem unidade)
     is_simulado: Optional[bool] = False
+    nome_custom: Optional[str] = None
+    valor_monetario: Optional[float] = None
+    data_personalizada: Optional[str] = None  # ISO 8601: "2026-05-01T10:00:00Z"
 
 
 # ─── ROTA 1: Registrar consumo ────────────────────────────────────────────────
@@ -33,12 +36,21 @@ class ConsumoRegistrar(BaseModel):
 def registrar_consumo(dados: ConsumoRegistrar, db: Session = Depends(get_db)):
     """
     Salva um novo registro de consumo no banco de dados.
-    Chamado pelas telas de Água e Energia após o usuário confirmar os dados.
+    Chamado pelas telas de Agua, Energia e Outros apos o usuario confirmar os dados.
+    Se data_personalizada for informada, usa ela em vez de datetime.now() para data_registro.
     """
-    # Verifica se o usuário existe antes de registrar
+    # Verifica se o usuario existe antes de registrar
     usuario = db.query(Usuario).filter(Usuario.id == dados.id_usuario).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    # Determina a data de registro: personalizada ou agora
+    data_final = datetime.now(timezone.utc)
+    if dados.data_personalizada:
+        try:
+            data_final = datetime.fromisoformat(dados.data_personalizada.replace("Z", "+00:00"))
+        except Exception:
+            pass  # fallback para now()
 
     novo_consumo = Consumo(
         id_usuario=dados.id_usuario,
@@ -46,7 +58,9 @@ def registrar_consumo(dados: ConsumoRegistrar, db: Session = Depends(get_db)):
         valor=dados.valor,
         unidade_medida=dados.unidade_medida,
         is_simulado=dados.is_simulado,
-        data_registro=datetime.now(timezone.utc),
+        nome_custom=dados.nome_custom,
+        valor_monetario=dados.valor_monetario,
+        data_registro=data_final,
     )
     db.add(novo_consumo)
     db.commit()
@@ -59,18 +73,21 @@ def registrar_consumo(dados: ConsumoRegistrar, db: Session = Depends(get_db)):
         "valor": float(novo_consumo.valor),
         "unidade_medida": novo_consumo.unidade_medida,
         "is_simulado": novo_consumo.is_simulado,
+        "nome_custom": novo_consumo.nome_custom,
+        "valor_monetario": float(novo_consumo.valor_monetario) if novo_consumo.valor_monetario else None,
         "data_registro": novo_consumo.data_registro.isoformat(),
         "mensagem": "Consumo registrado com sucesso",
     }
 
 
-# ─── ROTA 2: Consumo semanal (últimos 7 dias, agrupado por dia) ───────────────
+# ─── ROTA 2: Consumo semanal (ultimos 7 dias, agrupado por dia) ───────────────
 
 @consumo_router.get("/semanal/{id_usuario}")
 def consumo_semanal(id_usuario: int, db: Session = Depends(get_db)):
     """
     Retorna os consumos dos ultimos 7 dias agrupados por data real.
     Gera labels dinamicos (Hoje, Ontem, dia da semana).
+    Substitui 'vampiro' por 'outros' (valor monetario em R$).
     """
     agora = datetime.now(timezone.utc)
 
@@ -88,7 +105,7 @@ def consumo_semanal(id_usuario: int, db: Session = Depends(get_db)):
     # Mapear por data real
     agua    = {d: 0.0 for d in dias_range}
     energia = {d: 0.0 for d in dias_range}
-    vampiro = {d: 0.0 for d in dias_range}
+    outros  = {d: 0.0 for d in dias_range}
 
     for r in registros:
         data = r.data_registro
@@ -100,8 +117,8 @@ def consumo_semanal(id_usuario: int, db: Session = Depends(get_db)):
                 agua[dia] += float(r.valor)
             elif r.tipo_consumo == "energia":
                 energia[dia] += float(r.valor)
-            elif r.tipo_consumo == "vampiro":
-                vampiro[dia] += float(r.valor)
+            elif r.tipo_consumo == "outros":
+                outros[dia] += float(r.valor_monetario or 0)
 
     # Labels dinamicos (hoje, ontem, dias da semana)
     nomes_pt = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"]
@@ -121,7 +138,7 @@ def consumo_semanal(id_usuario: int, db: Session = Depends(get_db)):
         "dias":    labels,
         "agua":    [round(agua[d], 2)    for d in dias_range],
         "energia": [round(energia[d], 4) for d in dias_range],
-        "vampiro": [round(vampiro[d], 4) for d in dias_range],
+        "outros":  [round(outros[d], 2)  for d in dias_range],
     }
 
 
@@ -130,9 +147,9 @@ def consumo_semanal(id_usuario: int, db: Session = Depends(get_db)):
 @consumo_router.get("/resumo/{id_usuario}")
 def resumo_semanal(id_usuario: int, db: Session = Depends(get_db)):
     """
-    Retorna os totais acumulados da semana atual para o usuário.
-    Usado na Home para exibir as StatBars de Água e Energia.
-    Também calcula valores poupados e percentuais.
+    Retorna os totais acumulados da semana atual para o usuario.
+    Usado na Home para exibir as StatBars de Agua e Energia.
+    Inclui total em R$ dos consumos 'outros'.
     """
     agora = datetime.now(timezone.utc)
     sete_dias_atras = agora - timedelta(days=7)
@@ -149,60 +166,68 @@ def resumo_semanal(id_usuario: int, db: Session = Depends(get_db)):
     # Soma os valores por categoria
     total_agua    = sum(float(r.valor) for r in registros if r.tipo_consumo == "agua")
     total_energia = sum(float(r.valor) for r in registros if r.tipo_consumo == "energia")
-    total_vampiro = sum(float(r.valor) for r in registros if r.tipo_consumo == "vampiro")
+    total_outros  = sum(float(r.valor_monetario or 0) for r in registros if r.tipo_consumo == "outros")
 
-    # Metas de referência semanal (base: média brasileira)
+    # Metas de referencia semanal (base: media brasileira)
     META_AGUA_SEMANAL    = 700.0   # litros
     META_ENERGIA_SEMANAL = 15.0    # kWh
-    META_VAMPIRO_SEMANAL = 3.5     # kWh
 
-    # Calcula quanto o usuário "poupou" em relação à média de referência
-    agua_poupada    = max(0.0, META_AGUA_SEMANAL - total_agua)
-    energia_poupada = max(0.0, META_ENERGIA_SEMANAL - total_energia)
-
-    # Calcula percentuais de uso em relação à meta (nunca passa de 100%)
+    # Calcula percentuais de uso em relacao a meta (nunca passa de 100%)
     percentual_agua    = min(100, round((total_agua / META_AGUA_SEMANAL) * 100, 1))
     percentual_energia = min(100, round((total_energia / META_ENERGIA_SEMANAL) * 100, 1))
-    percentual_outros  = min(100, round((total_vampiro / META_VAMPIRO_SEMANAL) * 100, 1))
 
     return {
         "total_agua_L":          round(total_agua, 2),
         "total_energia_kWh":     round(total_energia, 4),
-        "total_vampiro_kWh":     round(total_vampiro, 4),
-        "agua_poupada_L":        round(agua_poupada, 2),
-        "energia_poupada_kWh":   round(energia_poupada, 4),
+        "total_outros_reais":    round(total_outros, 2),
         "percentual_agua":       percentual_agua,
         "percentual_energia":    percentual_energia,
-        "percentual_outros":     percentual_outros,
         "meta_agua_L":           META_AGUA_SEMANAL,
         "meta_energia_kWh":      META_ENERGIA_SEMANAL,
     }
 
 
-# ─── ROTA 4: Histórico dos últimos 30 registros ───────────────────────────────
+# ─── ROTA 4: Historico dos ultimos 50 registros ───────────────────────────────
 
 @consumo_router.get("/historico/{id_usuario}")
 def historico_consumo(id_usuario: int, db: Session = Depends(get_db)):
     """
-    Retorna os últimos 30 registros de consumo do usuário.
-    Útil para debug e para futuras telas de histórico detalhado.
+    Retorna os ultimos 50 registros de consumo do usuario.
+    Inclui nome_custom e valor_monetario para registros tipo 'outros'.
     """
     registros = (
         db.query(Consumo)
         .filter(Consumo.id_usuario == id_usuario)
         .order_by(Consumo.data_registro.desc())
-        .limit(30)
+        .limit(50)
         .all()
     )
 
     return [
         {
-            "id":             r.id,
-            "tipo_consumo":   r.tipo_consumo,
-            "valor":          float(r.valor),
-            "unidade_medida": r.unidade_medida,
-            "is_simulado":    r.is_simulado,
-            "data_registro":  r.data_registro.isoformat() if r.data_registro else None,
+            "id":              r.id,
+            "tipo_consumo":    r.tipo_consumo,
+            "nome_custom":     r.nome_custom,
+            "valor":           float(r.valor),
+            "valor_monetario": float(r.valor_monetario) if r.valor_monetario else None,
+            "unidade_medida":  r.unidade_medida,
+            "data_registro":   r.data_registro.isoformat() if r.data_registro else None,
         }
         for r in registros
     ]
+
+
+# ─── ROTA 5: Apagar conta do usuario ─────────────────────────────────────────
+
+@consumo_router.delete("/usuario/{id_usuario}")
+def apagar_usuario(id_usuario: int, db: Session = Depends(get_db)):
+    """
+    Apaga permanentemente o usuario e todos os seus consumos (CASCADE).
+    Usado pela tela de Perfil quando o usuario confirma a exclusao da conta.
+    """
+    usuario = db.query(Usuario).filter(Usuario.id == id_usuario).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    db.delete(usuario)  # CASCADE apaga consumos automaticamente (configurado no model)
+    db.commit()
+    return {"mensagem": "Conta apagada com sucesso"}

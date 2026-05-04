@@ -108,6 +108,19 @@ const api = {
     }
     return { data: await response.json() };
   },
-};
 
+  // Funcao DELETE: Remove dados do backend (ex: apagar conta)
+  delete: async (endpoint) => {
+    const headers = await getAuthHeaders();
+    const response = await fetchWithTimeout(`${BASE_URL}${endpoint}`, {
+      method: 'DELETE',
+      headers,
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw { response: { data: errorData } };
+    }
+    return { data: await response.json() };
+  },
+};
 export default api;

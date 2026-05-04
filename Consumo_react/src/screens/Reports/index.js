@@ -1,17 +1,17 @@
 // Reports/index.js
-// Tela de relatórios com:
-//   1. Gráfico de barras SEMANAL empilhado (Água + Energia + Vampiro) — dados REAIS do backend
-//   2. Gráfico de pizza com as 3 categorias (soma = 100%)
+// Tela de relatorios com:
+//   1. Grafico de barras SEMANAL empilhado (Agua + Energia + Outros) — dados REAIS do backend
+//   2. Grafico de pizza com as 3 categorias normalizadas em R$ (soma = 100%)
 //   3. Card de "Totais da semana" com valores reais
-//   4. Modal educativo sobre Consumo Vampiro
+//   4. Modal informativo sobre as categorias
 //
-// Os dados são buscados do backend em /consumo/semanal/{id_usuario}.
-// Se a requisição falhar, mantém os dados mock como fallback.
+// Os dados sao buscados do backend em /consumo/semanal/{id_usuario}.
+// Se a requisicao falhar, mantem zeros como fallback.
 //
 // FIX WEB:
 // - ScrollView recebe overflow:'scroll' via Platform.select para habilitar mouse wheel
-// - PieChart do react-native-chart-kit NÃO funciona na web (usa ART que não existe)
-// - Na web, renderizamos um gráfico de pizza manual usando react-native-svg (Conic gradient via arcos)
+// - PieChart do react-native-chart-kit NAO funciona na web (usa ART que nao existe)
+// - Na web, renderizamos um grafico de pizza manual usando react-native-svg
 
 import React, { useState, useEffect, useContext } from 'react';
 import {
@@ -26,24 +26,15 @@ import api from '../../services/api';
 
 const SCREEN_W = Dimensions.get('window').width;
 
-// ─── DADOS INICIAIS ZERADOS (sem mock) ───────────────────────────────────────
-const MOCK_AGUA    = [0, 0, 0, 0, 0, 0, 0];
-const MOCK_ENERGIA = [0, 0, 0, 0, 0, 0, 0];
-const MOCK_VAMPIRO = [0, 0, 0, 0, 0, 0, 0];
-
 // ─── FIX WEB: estilo do ScrollView para habilitar scroll com mouse na web ────
 const webScrollStyle = Platform.select({
   web: { overflow: 'scroll', height: '100%', WebkitOverflowScrolling: 'touch' },
   default: {},
 });
 
-// ─── COMPONENTE: Gráfico de Pizza compatível com Web e Nativo ────────────────
+// ─── COMPONENTE: Grafico de Pizza compativel com Web e Nativo ────────────────
 // Na web, react-native-chart-kit PieChart falha porque depende de ART.
 // Este componente usa react-native-svg para desenhar arcos (funciona em ambos).
-//
-// Técnica: usar <Circle> com strokeDasharray para simular arcos de pizza.
-// Cada "fatia" é um círculo com traço = proporção da circunferência total.
-// strokeDashoffset rotaciona o início de cada fatia para encaixar após a anterior.
 function PieChartSVG({ data, size = 160, strokeWidth = 32 }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -82,7 +73,7 @@ function PieChartSVG({ data, size = 160, strokeWidth = 32 }) {
         </G>
       </Svg>
 
-      {/* Legenda abaixo do gráfico */}
+      {/* Legenda abaixo do grafico */}
       <View style={{ flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', marginTop: 12 }}>
         {data.map((item, index) => (
           <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16, marginBottom: 4 }}>
@@ -97,17 +88,21 @@ function PieChartSVG({ data, size = 160, strokeWidth = 32 }) {
   );
 }
 
-// ─── COMPONENTE NATIVO: usa PieChart do chart-kit (só no Android/iOS) ─────────
-// Importação condicional: só carrega chart-kit no nativo para evitar crash na web
+// ─── COMPONENTE NATIVO: usa PieChart do chart-kit (so no Android/iOS) ─────────
+// Importacao condicional: so carrega chart-kit no nativo para evitar crash na web
 let PieChartNative = null;
 if (Platform.OS !== 'web') {
   try {
     PieChartNative = require('react-native-chart-kit').PieChart;
   } catch (e) {
-    // Fallback: se chart-kit não estiver disponível, usaremos o SVG
+    // Fallback: se chart-kit nao estiver disponivel, usaremos o SVG
     PieChartNative = null;
   }
 }
+
+// ─── TARIFAS PARA NORMALIZACAO EM R$ ─────────────────────────────────────────
+const TARIFA_AGUA_LITRO = 0.0065;   // R$ 6,50/m3
+const TARIFA_ENERGIA_KWH = 0.87;    // R$/kWh
 
 export default function RelatoriosScreen() {
   const { colors } = useContext(ThemeContext);
@@ -115,17 +110,17 @@ export default function RelatoriosScreen() {
   const [modalVisible, setModalVisible] = useState(false);
 
   // ─── ESTADOS DOS DADOS SEMANAIS ───────────────────────────────────────────
-  // Arrays de 7 posições (Seg a Dom) para cada categoria
+  // Arrays de 7 posicoes para cada categoria
   const [dadosSemanais, setDadosSemanais] = useState({
     dias:    ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
     agua:    [0, 0, 0, 0, 0, 0, 0],
     energia: [0, 0, 0, 0, 0, 0, 0],
-    vampiro: [0, 0, 0, 0, 0, 0, 0],
+    outros:  [0, 0, 0, 0, 0, 0, 0],
   });
 
   // Totais da semana para o card de resumo
   const [totaisSemana, setTotaisSemana] = useState({
-    agua: 0, energia: 0, vampiro: 0,
+    agua: 0, energia: 0, outros: 0,
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -139,9 +134,9 @@ export default function RelatoriosScreen() {
           dias: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'],
           agua:    [0, 0, 0, 0, 0, 0, 0],
           energia: [0, 0, 0, 0, 0, 0, 0],
-          vampiro: [0, 0, 0, 0, 0, 0, 0],
+          outros:  [0, 0, 0, 0, 0, 0, 0],
         });
-        setTotaisSemana({ agua: 0, energia: 0, vampiro: 0 });
+        setTotaisSemana({ agua: 0, energia: 0, outros: 0 });
         setUsandoMock(false);
         setIsLoading(false);
         return;
@@ -151,23 +146,23 @@ export default function RelatoriosScreen() {
         const response = await api.get(`/consumo/semanal/${user.id}`);
         const dados = response.data;
 
-        // Verifica se há dados reais (pelo menos um valor não-zero)
+        // Verifica se ha dados reais (pelo menos um valor nao-zero)
         const temDados =
           dados.agua.some(v => v > 0) ||
           dados.energia.some(v => v > 0) ||
-          dados.vampiro.some(v => v > 0);
+          dados.outros.some(v => v > 0);
 
         if (temDados) {
           setDadosSemanais({
             dias:    dados.dias,
             agua:    dados.agua,
             energia: dados.energia,
-            vampiro: dados.vampiro,
+            outros:  dados.outros,
           });
           setTotaisSemana({
             agua:    dados.agua.reduce((a, b) => a + b, 0),
             energia: dados.energia.reduce((a, b) => a + b, 0),
-            vampiro: dados.vampiro.reduce((a, b) => a + b, 0),
+            outros:  dados.outros.reduce((a, b) => a + b, 0),
           });
           setUsandoMock(false);
         } else {
@@ -175,21 +170,21 @@ export default function RelatoriosScreen() {
             dias:    dados.dias,
             agua:    [0, 0, 0, 0, 0, 0, 0],
             energia: [0, 0, 0, 0, 0, 0, 0],
-            vampiro: [0, 0, 0, 0, 0, 0, 0],
+            outros:  [0, 0, 0, 0, 0, 0, 0],
           });
-          setTotaisSemana({ agua: 0, energia: 0, vampiro: 0 });
+          setTotaisSemana({ agua: 0, energia: 0, outros: 0 });
           setUsandoMock(false);
         }
       } catch (error) {
-        // Fallback: mantém zeros se o backend não responder
+        // Fallback: mantem zeros se o backend nao responder
         console.log('Erro ao buscar dados semanais:', error);
         setDadosSemanais({
           dias: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'],
           agua:    [0, 0, 0, 0, 0, 0, 0],
           energia: [0, 0, 0, 0, 0, 0, 0],
-          vampiro: [0, 0, 0, 0, 0, 0, 0],
+          outros:  [0, 0, 0, 0, 0, 0, 0],
         });
-        setTotaisSemana({ agua: 0, energia: 0, vampiro: 0 });
+        setTotaisSemana({ agua: 0, energia: 0, outros: 0 });
         setUsandoMock(false);
       } finally {
         setIsLoading(false);
@@ -199,28 +194,32 @@ export default function RelatoriosScreen() {
     buscarDadosSemanais();
   }, [user]);
 
-  // ─── CÁLCULOS DERIVADOS ───────────────────────────────────────────────────
-  const { dias, agua, energia, vampiro } = dadosSemanais;
-  const totais    = dias.map((_, i) => agua[i] + energia[i] + vampiro[i]);
-  const maxTotal  = Math.max(...totais, 1); // evita divisão por zero
+  // ─── CALCULOS DERIVADOS ───────────────────────────────────────────────────
+  const { dias, agua, energia, outros } = dadosSemanais;
 
-  // Somas para o gráfico de pizza
-  const somaAgua    = totaisSemana.agua    || agua.reduce((a, b) => a + b, 0);
-  const somaEnergia = totaisSemana.energia || energia.reduce((a, b) => a + b, 0);
-  const somaVampiro = totaisSemana.vampiro || vampiro.reduce((a, b) => a + b, 0);
-  const somaTotal   = somaAgua + somaEnergia + somaVampiro || 1;
+  // Para o grafico de barras: normalizar agua/energia/outros em mesma escala
+  // Agua e energia sao em unidades fisicas, outros em R$.
+  // Para o grafico de barras empilhado, usamos valores brutos de cada tipo.
+  const totais    = dias.map((_, i) => agua[i] + energia[i] + outros[i]);
+  const maxTotal  = Math.max(...totais, 1); // evita divisao por zero
 
-  // Percentuais para o gráfico de pizza
-  const pctAgua    = Math.round((somaAgua    / somaTotal) * 100);
-  const pctEnergia = Math.round((somaEnergia / somaTotal) * 100);
-  const pctVampiro = Math.round((somaVampiro / somaTotal) * 100);
+  // ─── PIZZA: Normalizar tudo para R$ para comparacao justa ─────────────────
+  const gastoAguaReais    = totaisSemana.agua * TARIFA_AGUA_LITRO;
+  const gastoEnergiaReais = totaisSemana.energia * TARIFA_ENERGIA_KWH;
+  const gastoOutrosReais  = totaisSemana.outros; // ja esta em R$
+  const gastoTotalReais   = gastoAguaReais + gastoEnergiaReais + gastoOutrosReais || 1;
 
-  // ─── DADOS DO GRÁFICO DE PIZZA ────────────────────────────────────────────
-  const vampiroColor = colors.violet || '#A78BFA';
+  // Percentuais normalizados em R$ para o pizza
+  const pctAgua    = Math.round((gastoAguaReais    / gastoTotalReais) * 100);
+  const pctEnergia = Math.round((gastoEnergiaReais / gastoTotalReais) * 100);
+  const pctOutros  = Math.round((gastoOutrosReais  / gastoTotalReais) * 100);
+
+  // ─── DADOS DO GRAFICO DE PIZZA ────────────────────────────────────────────
+  const outrosColor = colors.violet || '#8B5CF6';
   const pieData = [
-    { name: 'Água',    population: pctAgua    || 45, color: colors.blue,  legendFontColor: colors.textSub, legendFontSize: 12 },
-    { name: 'Energia', population: pctEnergia || 35, color: colors.gold,  legendFontColor: colors.textSub, legendFontSize: 12 },
-    { name: 'Vampiro', population: pctVampiro || 20, color: vampiroColor, legendFontColor: colors.textSub, legendFontSize: 12 },
+    { name: 'Água',    population: pctAgua    || 0, color: colors.blue,  legendFontColor: colors.textSub, legendFontSize: 12 },
+    { name: 'Energia', population: pctEnergia || 0, color: colors.gold,  legendFontColor: colors.textSub, legendFontSize: 12 },
+    { name: 'Outros',  population: pctOutros  || 0, color: outrosColor,  legendFontColor: colors.textSub, legendFontSize: 12 },
   ];
 
   const chartConfig = {
@@ -229,7 +228,7 @@ export default function RelatoriosScreen() {
 
   // ─── ESTILOS ──────────────────────────────────────────────────────────────
   const styles = StyleSheet.create({
-    // SEM flex:1 — ScrollView calcula sua própria altura no Android
+    // SEM flex:1 — ScrollView calcula sua propria altura no Android
     scrollContainer: { backgroundColor: colors.bg },
     inner: { paddingHorizontal: 20, paddingTop: 20 },
     card: {
@@ -250,7 +249,7 @@ export default function RelatoriosScreen() {
     },
     mockBadgeText: { color: colors.gold, fontSize: 10, fontWeight: 'bold' },
 
-    // ─── GRÁFICO DE BARRAS EMPILHADO ───
+    // ─── GRAFICO DE BARRAS EMPILHADO ───
     chartContainer: { flexDirection: 'row', alignItems: 'flex-end', height: 130, justifyContent: 'space-between' },
     barCol: { alignItems: 'center', flex: 1 },
     barWrapper: { width: 18, height: 110, justifyContent: 'flex-end', alignItems: 'center' },
@@ -260,7 +259,7 @@ export default function RelatoriosScreen() {
     legendDot: { width: 8, height: 8, borderRadius: 4, marginRight: 4 },
     legendText: { color: colors.textSub, fontSize: 11 },
 
-    // ─── GRÁFICO DE PIZZA ───
+    // ─── GRAFICO DE PIZZA ───
     pieWrapper: { alignItems: 'center', marginVertical: 8 },
     pieNote: { color: colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 6 },
 
@@ -280,8 +279,6 @@ export default function RelatoriosScreen() {
     modalDragIndicator: { width: 40, height: 5, backgroundColor: colors.border, borderRadius: 3, alignSelf: 'center', marginBottom: 16 },
     modalTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text, marginBottom: 12 },
     modalText: { fontSize: 16, color: colors.textSub, lineHeight: 24, marginBottom: 16 },
-    modalTipBox: { backgroundColor: colors.surface, borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.border },
-    modalTipText: { fontSize: 14, color: colors.text, marginBottom: 8, fontWeight: '500' },
     modalCloseBtn: { backgroundColor: colors.blue, padding: 16, borderRadius: 16, alignItems: 'center' },
     modalCloseText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
   });
@@ -303,11 +300,11 @@ export default function RelatoriosScreen() {
       >
         <View style={styles.inner}>
 
-          {/* ─── CARD 1: GRÁFICO DE BARRAS SEMANAL EMPILHADO ─── */}
+          {/* ─── CARD 1: GRAFICO DE BARRAS SEMANAL EMPILHADO ─── */}
           <View style={styles.card}>
             <Text style={styles.title}>Consumo semanal</Text>
 
-            {/* Badge indicando se são dados reais ou mock */}
+            {/* Badge indicando se sao dados reais ou mock */}
             {usandoMock && (
               <View style={styles.mockBadge}>
                 <Text style={styles.mockBadgeText}>Dados de demonstracao</Text>
@@ -323,16 +320,16 @@ export default function RelatoriosScreen() {
               <>
                 <View style={styles.chartContainer}>
                   {dias.map((d, i) => {
-                    const aguaPct  = (agua[i]    / maxTotal) * 100;
-                    const energPct = (energia[i] / maxTotal) * 100;
-                    const vampPct  = (vampiro[i] / maxTotal) * 100;
+                    const aguaPct   = (agua[i]    / maxTotal) * 100;
+                    const energPct  = (energia[i] / maxTotal) * 100;
+                    const outrosPct = (outros[i]  / maxTotal) * 100;
                     return (
                       <View key={d} style={styles.barCol}>
                         <View style={styles.barWrapper}>
-                          {/* Barra empilhada: Água (topo azul) + Energia (meio dourado) + Vampiro (base roxa) */}
-                          <View style={{ width: '100%', height: `${aguaPct}%`,  backgroundColor: colors.blue,  borderTopLeftRadius: 3, borderTopRightRadius: 3 }} />
-                          <View style={{ width: '100%', height: `${energPct}%`, backgroundColor: colors.gold }} />
-                          <View style={{ width: '100%', height: `${vampPct}%`,  backgroundColor: vampiroColor, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 }} />
+                          {/* Barra empilhada: Agua (topo azul) + Energia (meio dourado) + Outros (base roxa) */}
+                          <View style={{ width: '100%', height: `${aguaPct}%`,   backgroundColor: colors.blue,  borderTopLeftRadius: 3, borderTopRightRadius: 3 }} />
+                          <View style={{ width: '100%', height: `${energPct}%`,  backgroundColor: colors.gold }} />
+                          <View style={{ width: '100%', height: `${outrosPct}%`, backgroundColor: outrosColor, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 }} />
                         </View>
                         <Text style={styles.dayLabel}>{d}</Text>
                       </View>
@@ -351,8 +348,8 @@ export default function RelatoriosScreen() {
                     <Text style={styles.legendText}>Energia</Text>
                   </View>
                   <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: vampiroColor }]} />
-                    <Text style={styles.legendText}>Vampiro</Text>
+                    <View style={[styles.legendDot, { backgroundColor: outrosColor }]} />
+                    <Text style={styles.legendText}>Outros</Text>
                   </View>
                 </View>
               </>
@@ -361,9 +358,9 @@ export default function RelatoriosScreen() {
 
 
 
-          {/* ─── CARD 3: GRÁFICO DE PIZZA ─── */}
+          {/* ─── CARD 2: GRAFICO DE PIZZA ─── */}
           <View style={styles.card}>
-            <Text style={styles.title}>Distribuição do consumo</Text>
+            <Text style={styles.title}>Distribuição do consumo (R$)</Text>
             <TouchableOpacity
               style={styles.pieWrapper}
               activeOpacity={0.8}
@@ -384,13 +381,16 @@ export default function RelatoriosScreen() {
                   absolute={false}
                 />
               )}
-              <Text style={styles.pieNote}>Toque para saber sobre o Consumo Vampiro</Text>
+              <Text style={styles.pieNote}>
+                <Ionicons name="information-circle-outline" size={12} color={colors.textMuted} />
+                {' '}Toque para saber mais sobre as categorias
+              </Text>
             </TouchableOpacity>
           </View>
 
-          {/* ─── CARD: ECONOMIA ESTIMADA DA SEMANA ─── */}
+          {/* ─── CARD 3: TOTAIS DA SEMANA ─── */}
           <View style={[styles.card, { borderColor: colors.teal + '44', borderWidth: 1 }]}>
-            <Text style={styles.title}>Economia estimada esta semana</Text>
+            <Text style={styles.title}>Totais da semana</Text>
 
             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
               <View style={{
@@ -398,9 +398,9 @@ export default function RelatoriosScreen() {
                 borderRadius: 12, padding: 14, alignItems: 'center',
               }}>
                 <Ionicons name="water" size={20} color={colors.blue} />
-                <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 4 }}>Agua</Text>
+                <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 4 }}>Água</Text>
                 <Text style={{ color: colors.blue, fontWeight: 'bold', fontSize: 16, marginTop: 2 }}>
-                  R$ {(Math.max(0, (700 - somaAgua) * 0.0065)).toFixed(2)}
+                  {totaisSemana.agua.toFixed(1)} L
                 </Text>
               </View>
 
@@ -411,47 +411,30 @@ export default function RelatoriosScreen() {
                 <Ionicons name="flash" size={20} color={colors.gold} />
                 <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 4 }}>Energia</Text>
                 <Text style={{ color: colors.gold, fontWeight: 'bold', fontSize: 16, marginTop: 2 }}>
-                  R$ {(Math.max(0, (15 - somaEnergia) * 0.85)).toFixed(2)}
+                  {totaisSemana.energia.toFixed(2)} kWh
                 </Text>
               </View>
             </View>
 
             <View style={{
-              backgroundColor: (colors.violet || '#A78BFA') + '15',
+              backgroundColor: (outrosColor) + '15',
               borderRadius: 12, padding: 12,
               flexDirection: 'row', alignItems: 'center',
-              marginBottom: 12,
             }}>
-              <Ionicons name="moon" size={18} color={colors.violet || '#A78BFA'} style={{ marginRight: 10 }} />
+              <Ionicons name="receipt-outline" size={18} color={outrosColor} style={{ marginRight: 10 }} />
               <View>
-                <Text style={{ color: colors.textMuted, fontSize: 11 }}>Consumo Stand-by (Vampiro)</Text>
-                <Text style={{ color: colors.violet || '#A78BFA', fontWeight: 'bold', fontSize: 15, marginTop: 2 }}>
-                  {somaVampiro.toFixed(2)} kWh consumidos
+                <Text style={{ color: colors.textMuted, fontSize: 11 }}>Outros consumos</Text>
+                <Text style={{ color: outrosColor, fontWeight: 'bold', fontSize: 15, marginTop: 2 }}>
+                  R$ {totaisSemana.outros.toFixed(2)}
                 </Text>
               </View>
-            </View>
-
-            <View style={{
-              backgroundColor: colors.teal + '15',
-              borderRadius: 12, padding: 14, alignItems: 'center',
-            }}>
-              <Text style={{ color: colors.textMuted, fontSize: 11 }}>Total economizado</Text>
-              <Text style={{ color: colors.teal, fontWeight: 'bold', fontSize: 26, marginTop: 4 }}>
-                R$ {(
-                  Math.max(0, (700 - somaAgua) * 0.0065) +
-                  Math.max(0, (15 - somaEnergia) * 0.85)
-                ).toFixed(2)}
-              </Text>
-              <Text style={{ color: colors.textMuted, fontSize: 10, marginTop: 4 }}>
-                vs. media brasileira de consumo semanal
-              </Text>
             </View>
           </View>
 
         </View>
       </ScrollView>
 
-      {/* ─── MODAL: CONSUMO VAMPIRO ─── */}
+      {/* ─── MODAL: INFO SOBRE CATEGORIAS ─── */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -461,17 +444,19 @@ export default function RelatoriosScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalDragIndicator} />
-            <Text style={styles.modalTitle}>O que e Consumo Vampiro?</Text>
+            <Text style={styles.modalTitle}>Sobre as categorias</Text>
             <Text style={styles.modalText}>
-              Energia consumida por aparelhos em stand-by, como TVs, micro-ondas e
-              carregadores na tomada, que continuam gastando energia mesmo desligados.
-              Podem representar até 12% da sua conta de luz!
+              <Text style={{ fontWeight: 'bold' }}>Água</Text> → total de litros usados esta semana.
             </Text>
-            <View style={styles.modalTipBox}>
-              <Text style={styles.modalTipText}>Dicas de Economia:</Text>
-              <Text style={{ color: colors.textSub, marginBottom: 4 }}>• Tire carregadores da tomada após o uso.</Text>
-              <Text style={{ color: colors.textSub }}>• Desligue aparelhos no botão principal ou tire da tomada.</Text>
-            </View>
+            <Text style={styles.modalText}>
+              <Text style={{ fontWeight: 'bold' }}>Energia</Text> → total de kWh consumidos esta semana.
+            </Text>
+            <Text style={styles.modalText}>
+              <Text style={{ fontWeight: 'bold' }}>Outros</Text> → total em R$ de outros consumos registrados.
+            </Text>
+            <Text style={[styles.modalText, { fontSize: 13, fontStyle: 'italic' }]}>
+              O grafico de pizza normaliza todos os valores para R$ para comparacao proporcional justa.
+            </Text>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setModalVisible(false)}>
               <Text style={styles.modalCloseText}>Entendi</Text>
             </TouchableOpacity>

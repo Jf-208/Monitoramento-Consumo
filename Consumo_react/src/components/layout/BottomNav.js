@@ -21,9 +21,10 @@ export default function BottomNav({ active, onNav, labels = DEFAULT_LABELS }) {
   const { colors } = useContext(ThemeContext);
 
   const items = [
-    { id: 'home',       icon: 'home' },
-    { id: 'relatorios', icon: 'bar-chart' },
-    { id: 'perfil',     icon: 'person-circle' },
+    { id: 'home',       icon: 'home',          label: 'Início'     },
+    { id: 'registrar',  icon: 'add-circle',    label: 'Registrar'  },
+    { id: 'relatorios', icon: 'bar-chart',     label: 'Relatórios' },
+    { id: 'perfil',     icon: 'person-circle', label: 'Perfil'     },
   ];
 
   const styles = ScaledSheet.create({

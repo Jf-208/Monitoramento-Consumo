@@ -1,7 +1,7 @@
 // Profile/index.js
 // Tela de Perfil do usuario com card unico de resumo: consumo total historico,
-// dinheiro economizado, e nivel sustentavel.
-// Usa calcularNivel() e calcularEconomiaReais() do sustainability.js.
+// valor total gasto (agua + energia + outros em R$), e nivel sustentavel.
+// Inclui botao de apagar conta no menu de configuracoes.
 // Foto de perfil salva no AsyncStorage por usuario.
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Switch, Image, Alert } from 'react-native';
@@ -13,7 +13,8 @@ import { ThemeContext } from '../../contexts/ThemeContext';
 import { ConsumptionContext } from '../../contexts/ConsumptionContext';
 import { getPerfilStyles } from '../../styles/screensStyles';
 import ScreenScrollView from '../../components/layout/ScreenScrollView';
-import { calcularNivel, calcularEconomiaReais } from '../../utils/sustainability';
+import { calcularNivel } from '../../utils/sustainability';
+import api from '../../services/api';
 
 export default function PerfilScreen({ navigation }) {
   const { user, logout } = useContext(AuthContext);
@@ -56,6 +57,29 @@ export default function PerfilScreen({ navigation }) {
     }
   };
 
+  // ─── APAGAR CONTA ─────────────────────────────────────────────────────────
+  const handleApagarConta = () => {
+    Alert.alert(
+      'Apagar Conta',
+      'Esta ação é permanente e irá deletar todos os seus dados. Tem certeza?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Apagar Definitivamente',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.delete(`/consumo/usuario/${user.id}`);
+              await logout(); // limpa AsyncStorage e redireciona para login
+            } catch (e) {
+              Alert.alert('Erro', 'Não foi possível apagar a conta. Tente novamente.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <ScreenScrollView
       contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4 }}
@@ -88,81 +112,55 @@ export default function PerfilScreen({ navigation }) {
         marginBottom: 12,
       }}>
 
-        {/* SECAO 1: CONSUMO TOTAL HISTORICO */}
-        <Text style={{
-          color: colors.textMuted, fontSize: 10,
-          textTransform: 'uppercase', letterSpacing: 1,
-          marginBottom: 10,
-        }}>Consumo Total</Text>
-
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 }}>
-          <View style={{ alignItems: 'center', flex: 1 }}>
-            <Ionicons name="water" size={18} color={colors.blue} />
-            <Text style={{ color: colors.blue, fontWeight: 'bold', fontSize: 15, marginTop: 4 }}>
-              {(historicoTotal?.totalAguaL || 0).toFixed(0)} L
-            </Text>
-            <Text style={{ color: colors.textMuted, fontSize: 10, marginTop: 2 }}>Agua</Text>
-          </View>
-          <View style={{ alignItems: 'center', flex: 1 }}>
-            <Ionicons name="flash" size={18} color={colors.gold} />
-            <Text style={{ color: colors.gold, fontWeight: 'bold', fontSize: 15, marginTop: 4 }}>
-              {(historicoTotal?.totalEnergiaKwh || 0).toFixed(2)} kWh
-            </Text>
-            <Text style={{ color: colors.textMuted, fontSize: 10, marginTop: 2 }}>Energia</Text>
-          </View>
-          <View style={{ alignItems: 'center', flex: 1 }}>
-            <Ionicons name="moon" size={18} color={colors.violet || '#A78BFA'} />
-            <Text style={{ color: colors.violet || '#A78BFA', fontWeight: 'bold', fontSize: 15, marginTop: 4 }}>
-              {(historicoTotal?.totalVampiroKwh || 0).toFixed(2)} kWh
-            </Text>
-            <Text style={{ color: colors.textMuted, fontSize: 10, marginTop: 2 }}>Stand-by</Text>
-          </View>
-        </View>
-
-        {/* SEPARADOR */}
-        <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 14 }} />
-
-        {/* SECAO 2: DINHEIRO ECONOMIZADO */}
+        {/* SECAO 1: VALOR TOTAL GASTO */}
         <Text style={{
           color: colors.textMuted, fontSize: 10,
           textTransform: 'uppercase', letterSpacing: 1,
           marginBottom: 8,
-        }}>Dinheiro Economizado</Text>
+        }}>Valor Total Gasto</Text>
 
-        {(() => {
-          const economia = calcularEconomiaReais(
-            consumoSemanalReal.aguaPoupadaReal || 0,
-            consumoSemanalReal.energiaPoupadaReal || 0,
-          );
-          return (
-            <>
-              <Text style={{
-                color: colors.teal, fontWeight: 'bold', fontSize: 28,
-                marginBottom: 4,
-              }}>
-                R$ {economia.total.toFixed(2)}
-              </Text>
-              <Text style={{ color: colors.textMuted, fontSize: 12, marginBottom: 10 }}>
-                Agua: R$ {economia.agua.toFixed(2)} {'  |  '} Energia: R$ {economia.energia.toFixed(2)}
-              </Text>
-              <View style={{
-                flexDirection: 'row', alignItems: 'center',
-                backgroundColor: (colors.violet || '#A78BFA') + '15',
-                borderRadius: 8, padding: 8, marginBottom: 2,
-              }}>
-                <Ionicons name="moon" size={14} color={colors.violet || '#A78BFA'} style={{ marginRight: 6 }} />
-                <Text style={{ color: colors.textMuted, fontSize: 12 }}>
-                  Stand-by total: {(historicoTotal?.totalVampiroKwh || 0).toFixed(2)} kWh registrados
-                </Text>
-              </View>
-            </>
-          );
-        })()}
+        {/* Total em destaque */}
+        <Text style={{
+          color: colors.danger || '#E24B4A',
+          fontWeight: 'bold',
+          fontSize: 28,
+          marginBottom: 10,
+        }}>
+          R$ {(historicoTotal?.gastoTotalReais || 0).toFixed(2)}
+        </Text>
+
+        {/* Breakdown por categoria */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+          <Ionicons name="water" size={16} color={colors.blue} style={{ marginRight: 8 }} />
+          <Text style={{ color: colors.textSub, fontSize: 13, flex: 1 }}>
+            Água: R$ {(historicoTotal?.gastoAguaReais || 0).toFixed(2)}
+          </Text>
+          <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+            {(historicoTotal?.totalAguaL || 0).toFixed(0)} L
+          </Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+          <Ionicons name="flash" size={16} color={colors.gold} style={{ marginRight: 8 }} />
+          <Text style={{ color: colors.textSub, fontSize: 13, flex: 1 }}>
+            Energia: R$ {(historicoTotal?.gastoEnergiaReais || 0).toFixed(2)}
+          </Text>
+          <Text style={{ color: colors.textMuted, fontSize: 12 }}>
+            {(historicoTotal?.totalEnergiaKwh || 0).toFixed(2)} kWh
+          </Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <Ionicons name="receipt-outline" size={16} color={colors.violet || '#8B5CF6'} style={{ marginRight: 8 }} />
+          <Text style={{ color: colors.textSub, fontSize: 13 }}>
+            Outros: R$ {(historicoTotal?.totalOutrosReais || 0).toFixed(2)}
+          </Text>
+        </View>
 
         {/* SEPARADOR */}
         <View style={{ height: 1, backgroundColor: colors.border, marginTop: 14, marginBottom: 14 }} />
 
-        {/* SECAO 3: NIVEL SUSTENTAVEL */}
+        {/* SECAO 2: NIVEL SUSTENTAVEL */}
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{
             width: 36, height: 36, borderRadius: 18,
@@ -211,6 +209,17 @@ export default function PerfilScreen({ navigation }) {
         >
           <Text style={styles.menuText}>Ajuda</Text>
           <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </TouchableOpacity>
+
+        {/* Botao Apagar Conta */}
+        <TouchableOpacity
+          style={[styles.menuItem, { marginTop: 4, borderBottomWidth: 0 }]}
+          onPress={handleApagarConta}
+        >
+          <Text style={[styles.menuText, { color: colors.danger || '#E24B4A' }]}>
+            Apagar Conta
+          </Text>
+          <Ionicons name="trash-outline" size={18} color={colors.danger || '#E24B4A'} />
         </TouchableOpacity>
       </View>
 

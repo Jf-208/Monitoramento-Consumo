@@ -4,6 +4,7 @@
 // quando o usuario navega entre as telas de Agua e Energia.
 // Agora tambem integra com o backend (Railway) para registrar e buscar consumos reais.
 // Dados sao prefixados com user.id para isolamento por conta.
+// Suporta tipo "outros" com valor monetario e data personalizada.
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,25 +24,25 @@ export const ConsumptionProvider = ({ children }) => {
   const [consumoSemanalReal, setConsumoSemanalReal] = useState({
     agua: 0,
     energia: 0,
-    vampiro: 0,
-    aguaPoupadaReal: 0,
-    energiaPoupadaReal: 0,
+    outros: 0,           // total R$ dos "outros" na semana
     metaAguaL: 700,
     metaEnergiaKwh: 15,
     percentualAgua: 0,
     percentualEnergia: 0,
-    percentualVampiro: 0,
   });
 
   // Historico total de todos os registros do usuario
   const [historicoTotal, setHistoricoTotal] = useState({
     totalAguaL: 0,
     totalEnergiaKwh: 0,
-    totalVampiroKwh: 0,
-    economiaAguaReais: 0,
-    economiaEnergiaReais: 0,
-    economiaTotalReais: 0,
+    totalOutrosReais: 0,
+    gastoAguaReais: 0,     // totalAguaL * 0.0065 (R$/L)
+    gastoEnergiaReais: 0,  // totalEnergiaKwh * 0.87 (R$/kWh)
+    gastoTotalReais: 0,    // soma dos tres acima
   });
+
+  // Lista completa de registros (historico paginado)
+  const [registros, setRegistros] = useState([]);
 
   // Indica se o app ainda esta buscando dados do backend
   const [isLoadingBackend, setIsLoadingBackend] = useState(false);
@@ -107,13 +108,14 @@ export const ConsumptionProvider = ({ children }) => {
    * Registra um consumo real no servidor.
    * Faz 2 tentativas: a primeira imediata, a segunda apos 3s (Railway cold start).
    * Usa api.post() para garantir URL correta (BASE_URL + endpoint).
-   * @param {string} tipo - "agua", "energia" ou "vampiro"
+   * @param {string} tipo - "agua", "energia" ou "outros"
    * @param {number} valor - Quantidade consumida
-   * @param {string} unidade - "L" ou "kWh"
+   * @param {string} unidade - "L", "kWh" ou "" (vazio para outros)
    * @param {boolean} isSimulado - true se veio de simulacao do slider
+   * @param {object} extra - campos extras: { nome_custom, valor_monetario, data_personalizada }
    * @returns {{ success: boolean, message: string }}
    */
-  const salvarConsumoBackend = async (tipo, valor, unidade, isSimulado = true) => {
+  const salvarConsumoBackend = async (tipo, valor, unidade, isSimulado = false, extra = {}) => {
     if (!user?.id) {
       const msg = 'Usuario nao esta logado';
       setUltimoErroRegistro(msg);
@@ -121,11 +123,14 @@ export const ConsumptionProvider = ({ children }) => {
     }
 
     const payload = {
-      id_usuario:     user.id,
-      tipo_consumo:   tipo,
-      valor:          valor,
-      unidade_medida: unidade,
-      is_simulado:    isSimulado,
+      id_usuario:         user.id,
+      tipo_consumo:       tipo,
+      valor:              valor,
+      unidade_medida:     unidade,
+      is_simulado:        isSimulado,
+      nome_custom:        extra.nome_custom       || null,
+      valor_monetario:    extra.valor_monetario   || null,
+      data_personalizada: extra.data_personalizada || null,
     };
 
     const tentar = async () => {
@@ -169,16 +174,13 @@ export const ConsumptionProvider = ({ children }) => {
       const dados = response.data;
 
       setConsumoSemanalReal({
-        agua:               dados.total_agua_L        ?? 0,
-        energia:            dados.total_energia_kWh   ?? 0,
-        vampiro:            dados.total_vampiro_kWh   ?? 0,
-        aguaPoupadaReal:    dados.agua_poupada_L      ?? 0,
-        energiaPoupadaReal: dados.energia_poupada_kWh ?? 0,
-        metaAguaL:          dados.meta_agua_L         ?? 700,
-        metaEnergiaKwh:     dados.meta_energia_kWh    ?? 15,
-        percentualAgua:     dados.percentual_agua     ?? 0,
-        percentualEnergia:  dados.percentual_energia  ?? 0,
-        percentualVampiro:  dados.percentual_outros   ?? 0,
+        agua:             dados.total_agua_L        ?? 0,
+        energia:          dados.total_energia_kWh   ?? 0,
+        outros:           dados.total_outros_reais  ?? 0,
+        metaAguaL:        dados.meta_agua_L         ?? 700,
+        metaEnergiaKwh:   dados.meta_energia_kWh    ?? 15,
+        percentualAgua:   dados.percentual_agua     ?? 0,
+        percentualEnergia: dados.percentual_energia ?? 0,
       });
     } catch (error) {
       // Se falhar, mantem os dados anteriores sem quebrar o app
@@ -191,35 +193,31 @@ export const ConsumptionProvider = ({ children }) => {
   // ─── FUNCAO: Buscar historico total de registros ──────────────────────────
   /**
    * Busca todos os registros do usuario e calcula totais acumulados.
-   * Usado na tela de Perfil para exibir "Historico Total".
+   * Expoe a lista de registros para uso na tela de Registrar.
+   * Calcula gastos em R$ com tarifas de referencia.
    */
   const buscarHistoricoTotal = async () => {
     if (!user?.id) return;
     try {
       const response = await api.get(`/consumo/historico/${user.id}`);
-      const registros = response.data; // array de { tipo_consumo, valor, data_registro, ... }
+      const lista = response.data;
+      setRegistros(lista); // expoe o array completo para o historico
 
-      const totalAgua    = registros.filter(r => r.tipo_consumo === 'agua').reduce((acc, r) => acc + r.valor, 0);
-      const totalEnergia = registros.filter(r => r.tipo_consumo === 'energia').reduce((acc, r) => acc + r.valor, 0);
-      const totalVampiro = registros.filter(r => r.tipo_consumo === 'vampiro').reduce((acc, r) => acc + r.valor, 0);
+      const totalAgua    = lista.filter(r => r.tipo_consumo === 'agua').reduce((a, r) => a + r.valor, 0);
+      const totalEnergia = lista.filter(r => r.tipo_consumo === 'energia').reduce((a, r) => a + r.valor, 0);
+      const totalOutros  = lista.filter(r => r.tipo_consumo === 'outros').reduce((a, r) => a + (r.valor_monetario || 0), 0);
 
-      // Calculo de economia: referencia brasileira
-      // Agua: meta = 100L/dia. Se consumiu menos que a meta proporcional, economizou
-      // Energia: R$ 0,85/kWh | Agua: R$ 6,50/m3 = R$ 0,0065/L
-      const META_AGUA_DIA = 100; // litros por dia
-      const diasRegistrados = new Set(registros.map(r => r.data_registro?.split('T')[0])).size || 1;
-      const metaAguaTotal = META_AGUA_DIA * diasRegistrados;
-      const aguaPoupada = Math.max(0, metaAguaTotal - totalAgua);
-
-      const economiaAgua = parseFloat((aguaPoupada * 0.0065).toFixed(2));
+      const gastoAgua    = parseFloat((totalAgua * 0.0065).toFixed(2));    // R$0,0065/L
+      const gastoEnergia = parseFloat((totalEnergia * 0.87).toFixed(2));   // R$0,87/kWh
+      const gastoTotal   = parseFloat((gastoAgua + gastoEnergia + totalOutros).toFixed(2));
 
       setHistoricoTotal({
-        totalAguaL:          parseFloat(totalAgua.toFixed(2)),
-        totalEnergiaKwh:     parseFloat(totalEnergia.toFixed(4)),
-        totalVampiroKwh:     parseFloat(totalVampiro.toFixed(4)),
-        economiaAguaReais:   economiaAgua,
-        economiaEnergiaReais: 0,
-        economiaTotalReais:  economiaAgua,
+        totalAguaL:       parseFloat(totalAgua.toFixed(2)),
+        totalEnergiaKwh:  parseFloat(totalEnergia.toFixed(4)),
+        totalOutrosReais: parseFloat(totalOutros.toFixed(2)),
+        gastoAguaReais:   gastoAgua,
+        gastoEnergiaReais: gastoEnergia,
+        gastoTotalReais:  gastoTotal,
       });
     } catch (e) {
       console.log('Erro ao buscar historico total:', e);
@@ -238,6 +236,9 @@ export const ConsumptionProvider = ({ children }) => {
       consumoSemanalReal,
       historicoTotal,
       isLoadingBackend,
+      // Historico de registros (lista completa)
+      registros,
+      buscarRegistros: buscarHistoricoTotal, // reutiliza a mesma funcao
       // Diagnostico de erros
       ultimoErroRegistro, setUltimoErroRegistro,
       // Funcoes de integracao com o servidor
