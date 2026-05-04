@@ -1,190 +1,119 @@
 // FAB.js
-// Floating Action Button (FAB) — botão redondo "+" que expande um menu de navegação rápida.
-// Usa Modal para o overlay e menu expandido, garantindo que quando fechado
-// NENHUMA área do FAB intercepte toques no conteúdo abaixo (scroll, botões, etc.).
-//
-// ARQUITETURA ANDROID:
-// - Quando fechado: só o TouchableOpacity do botão "+" existe — sem Views extras.
-// - Quando aberto: Modal assume a tela inteira, itens renderizados dentro do Modal.
-// - pointerEvents="box-none" no wrapper: só o botão em si captura toque.
+// Floating Action Button — botao "+" no canto superior direito.
+// Fechado: botao circular dourado com icone "+".
+// Aberto: "+" vira "X" (vermelho), opcoes aparecem abaixo alinhadas a direita.
+// Usa MotiView para animacoes staggered nos itens do menu.
 
 import React, { useState, useContext } from 'react';
-import {
-  View, Text, TouchableOpacity, Modal,
-  TouchableWithoutFeedback, Platform, StatusBar,
-} from 'react-native';
-import { ScaledSheet } from 'react-native-size-matters';
-import { ThemeContext } from '../../contexts/ThemeContext';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
+import { ThemeContext } from '../../contexts/ThemeContext';
+
+const OPCOES = [
+  { label: 'Agua',    icon: 'water', cor: '#378ADD', rota: 'Water'  },
+  { label: 'Energia', icon: 'flash', cor: '#EF9F27', rota: 'Energy' },
+  { label: 'Dicas',   icon: 'bulb',  cor: '#1D9E75', rota: 'Tips'   },
+];
 
 export default function FAB({ navigation }) {
-  const [open, setOpen] = useState(false); // Controla se o menu está expandido
+  const [aberto, setAberto] = useState(false);
   const { colors } = useContext(ThemeContext);
 
-  // Itens do menu — cada um navega para uma tela via Stack Navigator
-  const items = [
-    { id: 'Water',  icon: 'water', label: 'Agua',    color: colors.blue },
-    { id: 'Energy', icon: 'flash', label: 'Energia', color: colors.gold },
-    { id: 'Tips',   icon: 'bulb',  label: 'Dicas',   color: colors.teal },
-  ];
-
-  const handleSelect = (screenId) => {
-    setOpen(false); // Fecha o menu antes de navegar
-    navigation.navigate(screenId);
+  const navegar = (rota) => {
+    setAberto(false);
+    navigation.navigate(rota);
   };
 
-  const menuBottom = 60;
-
-  const styles = ScaledSheet.create({
-    // Wrapper do botão principal — pointerEvents="box-none" é CRÍTICO:
-    // faz com que apenas o TouchableOpacity filho capture toque,
-    // e não a área transparente ao redor do botão.
-    fabWrapper: {
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-
-    // Botão "+" principal
-    fabButton: {
-      width: '44@s',
-      height: '44@s',
-      borderRadius: '22@s',
-      alignItems: 'center',
-      justifyContent: 'center',
-      elevation: 6,
-    },
-    fabText: {
-      color: '#FFF',
-      fontSize: '24@ms',
-      lineHeight: '26@ms',
-    },
-
-    // Overlay escuro do Modal — cobre tela inteira, fecha o menu ao tocar
-    overlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.75)',
-    },
-
-    // Container dos itens do menu dentro do Modal
-    // Posicionado absolute no canto superior direito da tela,
-    // alinhado com o botão do FAB
-    menuContainer: {
-      position: 'absolute',
-      bottom: menuBottom,
-      alignSelf: 'center',
-      alignItems: 'center',
-    },
-
-    // Botão de fechar (×) dentro do Modal — substitui visualmente o "+"
-    closeButton: {
-      width: '44@s',
-      height: '44@s',
-      borderRadius: '22@s',
-      alignItems: 'center',
-      justifyContent: 'center',
-      elevation: 6,
-      marginBottom: '20@vs',
-    },
-
-    // Cada item do menu: label de texto + botão redondo com ícone
-    menuItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: '16@vs',
-    },
-    menuLabel: {
-      backgroundColor: colors.surface,
-      paddingHorizontal: '12@s',
-      paddingVertical: '6@vs',
-      borderRadius: '12@s',
-      borderWidth: 1,
-      borderColor: colors.border,
-      marginRight: '12@s',
-      elevation: 2,
-    },
-    menuLabelText: {
-      fontSize: '14@ms',
-      fontWeight: 'bold',
-    },
-    menuIconBtn: {
-      width: '44@s',
-      height: '44@s',
-      borderRadius: '22@s',
-      borderWidth: 2,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.surface,
-      elevation: 4,
-    },
-  });
-
   return (
-    // pointerEvents="box-none" = APENAS o TouchableOpacity filho captura toque.
-    // A área transparente ao redor do botão NÃO bloqueia o scroll abaixo.
-    <View style={styles.fabWrapper} pointerEvents="box-none">
-
-      {/* Botão "+" principal — sempre visível */}
+    <View style={styles.container} pointerEvents="box-none">
+      {/* Botao principal */}
       <TouchableOpacity
-        style={[styles.fabButton, { backgroundColor: colors.gold }]}
-        onPress={() => setOpen(true)}
+        style={[styles.fabPrincipal, { backgroundColor: aberto ? '#E24B4A' : '#EF9F27' }]}
+        onPress={() => setAberto(a => !a)}
         activeOpacity={0.85}
       >
-        <Text style={styles.fabText}>+</Text>
+        <MotiView
+          animate={{ rotate: aberto ? '45deg' : '0deg' }}
+          transition={{ type: 'timing', duration: 200 }}
+        >
+          <Ionicons name="add" size={28} color="#fff" />
+        </MotiView>
       </TouchableOpacity>
 
-      {/* Modal do menu — só existe quando open=true, zero impacto no scroll quando fechado */}
-      <Modal
-        visible={open}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setOpen(false)}
-        statusBarTranslucent  // Garante que o Modal cubra a StatusBar no Android
-      >
-        {/* Overlay: fecha o menu ao tocar fora dos itens */}
-        <TouchableWithoutFeedback onPress={() => setOpen(false)}>
-          <View style={styles.overlay} />
-        </TouchableWithoutFeedback>
-
-        {/* Itens do menu posicionados no canto superior direito */}
-        <View style={styles.menuContainer} pointerEvents="box-none">
-
-          {/* Botão "×" para fechar — no mesmo lugar visual do "+" */}
+      {/* Opcoes — aparecem abaixo do botao principal */}
+      {OPCOES.map((op, i) => (
+        <MotiView
+          key={op.rota}
+          from={{ opacity: 0, translateY: -8, scale: 0.8 }}
+          animate={{
+            opacity: aberto ? 1 : 0,
+            translateY: aberto ? 0 : -8,
+            scale: aberto ? 1 : 0.8,
+          }}
+          transition={{
+            type: 'timing',
+            duration: 200,
+            delay: aberto ? i * 60 : (OPCOES.length - 1 - i) * 40,
+          }}
+          style={[styles.opcaoRow, { pointerEvents: aberto ? 'auto' : 'none' }]}
+        >
+          <Text style={styles.opcaoLabel}>{op.label}</Text>
           <TouchableOpacity
-            style={[styles.closeButton, { backgroundColor: colors.danger }]}
-            onPress={() => setOpen(false)}
+            style={[styles.opcaoBtn, { backgroundColor: op.cor }]}
+            onPress={() => navegar(op.rota)}
             activeOpacity={0.85}
           >
-            <Text style={[styles.fabText, { transform: [{ rotate: '45deg' }] }]}>+</Text>
+            <Ionicons name={op.icon} size={20} color="#fff" />
           </TouchableOpacity>
-
-          {items.map((item, index) => (
-            <MotiView
-              key={item.id}
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: 'timing', duration: 250, delay: index * 80 }}
-            >
-              <View style={styles.menuItem}>
-                <View style={styles.menuLabel}>
-                  <Text style={[styles.menuLabelText, { color: item.color }]}>
-                    {item.label}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={[styles.menuIconBtn, { borderColor: item.color + '55' }]}
-                  onPress={() => handleSelect(item.id)}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name={item.icon} size={20} color={item.color} />
-                </TouchableOpacity>
-              </View>
-            </MotiView>
-          ))}
-
-        </View>
-      </Modal>
-
+        </MotiView>
+      ))}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'flex-end',
+    gap: 10,
+  },
+  fabPrincipal: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+  },
+  opcaoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  opcaoLabel: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  opcaoBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+});

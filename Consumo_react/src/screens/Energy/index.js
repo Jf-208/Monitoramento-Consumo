@@ -1,11 +1,10 @@
 // Energy/index.js
 // Tela de Dashboard de Energia.
-// Permite ao usuário simular o consumo de energia selecionando aparelhos (TV, Geladeira, etc)
-// ou ajustando a potência e o tempo de uso para calcular kWh e o custo.
-// Agora integra com o backend: o botão "Registrar" salva o consumo no servidor Railway.
+// Permite simular consumo selecionando aparelhos ou ajustando potencia/tempo.
+// Integra com o backend para registrar consumo.
 
 import React, { useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import { verticalScale } from 'react-native-size-matters';
@@ -14,6 +13,7 @@ import { ConsumptionContext } from '../../contexts/ConsumptionContext';
 import { getEnergiaStyles } from '../../styles/screensStyles';
 import ScreenScrollView from '../../components/layout/ScreenScrollView';
 import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function EnergiaScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
@@ -22,62 +22,69 @@ export default function EnergiaScreen({ navigation }) {
     energiaTempo,    setEnergiaTempo,
     salvarConsumoBackend,
     buscarResumoSemanal,
+    ultimoErroRegistro,
   } = useContext(ConsumptionContext);
 
   const styles = getEnergiaStyles(colors);
 
-  // Controle de loading do botão "Registrar"
+  // Controle de loading
   const [salvando, setSalvando] = useState(false);
 
   const kWh   = ((energiaPotencia * energiaTempo) / 60 / 1000).toFixed(2);
   const custo = (parseFloat(kWh) * 0.87).toFixed(2);
 
+  // Aparelhos com icones MaterialCommunityIcons
   const aparelhos = [
-    { nome: 'Chuveiro',  w: 5500 },
-    { nome: 'Ar-cond.',  w: 1500 },
-    { nome: 'Geladeira', w: 400  },
-    { nome: 'TV 55"',    w: 150  },
-    { nome: 'PC',        w: 300  },
+    { nome: 'Chuveiro',  w: 5500, icon: 'shower' },
+    { nome: 'Ar-cond.',  w: 1500, icon: 'air-conditioner' },
+    { nome: 'Geladeira', w: 150,  icon: 'fridge-outline' },
+    { nome: 'TV 55"',    w: 120,  icon: 'television' },
+    { nome: 'PC',        w: 300,  icon: 'desktop-tower' },
   ];
 
-  // ─── FUNÇÃO: Registrar consumo no backend ─────────────────────────────────
+  // ─── Registrar consumo no backend (com tratamento robusto de erro) ─────────
   const handleRegistrar = async () => {
     const valorKwh = parseFloat(kWh);
 
     if (valorKwh <= 0) {
-      Alert.alert('Atenção', 'Ajuste a potência e o tempo antes de registrar.');
+      Alert.alert('Atencao', 'Ajuste a potencia e o tempo antes de registrar.');
       return;
     }
 
     setSalvando(true);
     try {
-      // Salva o consumo de energia calculado (kWh) como simulado
       const resultado = await salvarConsumoBackend('energia', valorKwh, 'kWh', true);
 
       if (resultado.success) {
-        // Atualiza o resumo semanal da Home imediatamente após salvar
         await buscarResumoSemanal();
-
         Alert.alert(
-          'Consumo Registrado!',
-          `${kWh} kWh de energia registrados com sucesso.\nCusto estimado: R$ ${custo}\n\nSua Home foi atualizada.`,
-          [{ text: 'OK', style: 'default' }]
+          'Registrado!',
+          `${kWh} kWh de energia registrados com sucesso.\nCusto estimado: R$ ${custo}\n\nSua Home foi atualizada!`,
+          [{ text: 'OK' }]
         );
       } else {
         Alert.alert(
-          'Erro ao Registrar',
-          resultado.message || 'Não foi possível salvar o consumo. Verifique a conexão.',
-          [{ text: 'Tentar novamente', style: 'default' }]
+          'Erro ao registrar',
+          (resultado.message || 'Falha ao salvar.') + '\n\nVerifique sua conexao com a internet.',
+          [
+            { text: 'Tentar novamente', onPress: handleRegistrar },
+            { text: 'Cancelar', style: 'cancel' },
+          ]
         );
       }
+    } catch (e) {
+      Alert.alert(
+        'Sem conexao',
+        'Nao foi possivel alcancar o servidor. Verifique sua internet e tente novamente.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setSalvando(false);
     }
   };
 
-  // ─── RENDER ───────────────────────────────────────────────────────────────
+  // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
-    // SafeAreaView protege o topo no Android sem interferir na Stack Navigator
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
       <ScreenScrollView
         contentContainerStyle={styles.contentContainer}
@@ -103,10 +110,18 @@ export default function EnergiaScreen({ navigation }) {
                   {
                     backgroundColor: active ? colors.gold + '28' : colors.surface,
                     borderColor:     active ? colors.gold : colors.border,
+                    flexDirection: 'row',
+                    alignItems: 'center',
                   },
                 ]}
                 onPress={() => setEnergiaPotencia(a.w)}
               >
+                <MaterialCommunityIcons
+                  name={a.icon}
+                  size={16}
+                  color={active ? colors.gold : colors.textSub}
+                  style={{ marginRight: 4 }}
+                />
                 <Text style={{ color: active ? colors.gold : colors.textSub, fontWeight: active ? 'bold' : 'normal' }}>
                   {a.nome}
                 </Text>
@@ -116,7 +131,7 @@ export default function EnergiaScreen({ navigation }) {
         </View>
 
         <View style={styles.row}>
-          <Text style={{ color: colors.textSub }}>Potência:</Text>
+          <Text style={{ color: colors.textSub }}>Potencia:</Text>
           <Text style={styles.valHighlight}>{energiaPotencia}W</Text>
         </View>
         <Slider
@@ -142,17 +157,34 @@ export default function EnergiaScreen({ navigation }) {
       {/* ─── GRID DE RESULTADOS ─── */}
       <View style={styles.resultGrid}>
         <View style={[styles.resCard, { backgroundColor: colors.gold + '12', borderColor: colors.gold + '38', marginRight: 10 }]}>
+          <Ionicons name="flash" size={20} color={colors.gold} style={{ marginBottom: 4 }} />
           <Text style={styles.resLabel}>Consumo</Text>
           <Text style={[styles.resVal, { color: colors.gold }]}>{kWh} kWh</Text>
         </View>
         <View style={[styles.resCard, { backgroundColor: colors.teal + '12', borderColor: colors.teal + '38' }]}>
+          <Ionicons name="cash-outline" size={20} color={colors.teal} style={{ marginBottom: 4 }} />
           <Text style={styles.resLabel}>Custo</Text>
           <Text style={[styles.resVal, { color: colors.teal }]}>R$ {custo}</Text>
         </View>
       </View>
 
+      {/* ─── PAINEL DE DIAGNOSTICO (exibe erro do backend) ─── */}
+      {ultimoErroRegistro ? (
+        <View style={{
+          backgroundColor: '#FF000022',
+          borderColor: '#FF5A72',
+          borderWidth: 1,
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 8,
+        }}>
+          <Text style={{ color: '#FF5A72', fontSize: 12 }}>
+            ERRO: {ultimoErroRegistro}
+          </Text>
+        </View>
+      ) : null}
 
-      {/* ─── BOTÃO: Registrar consumo no backend ─── */}
+      {/* ─── BOTAO: Registrar consumo no backend ─── */}
       <TouchableOpacity
         style={{
           backgroundColor: colors.gold,

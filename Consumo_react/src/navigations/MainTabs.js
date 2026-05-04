@@ -107,16 +107,13 @@ export default function MainTabs({ navigation }) {
       }),
     },
 
-    // FAB em position:absolute — centralizado acima da BottomNav.
+    // FAB em position:absolute — canto superior direito abaixo do header.
     // pointerEvents="box-none" garante que apenas o botao do FAB
     // captura toque, e nao a area transparente ao redor dele.
     fabContainer: {
       position: 'absolute',
-      bottom: BOTTOM_NAV_HEIGHT + 16,
-      alignSelf: 'center',
-      left: 0,
-      right: 0,
-      alignItems: 'center',
+      top: statusBarHeight + HEADER_HEIGHT + 8,
+      right: 20,
       zIndex: 999,
     },
   });

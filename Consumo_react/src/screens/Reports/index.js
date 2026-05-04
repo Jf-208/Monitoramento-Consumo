@@ -19,16 +19,17 @@ import {
   Modal, Dimensions, StyleSheet, ActivityIndicator, Platform,
 } from 'react-native';
 import { Svg, Circle, G, Text as SvgText } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 import { ThemeContext } from '../../contexts/ThemeContext';
 import { AuthContext } from '../../contexts/AuthContext';
 import api from '../../services/api';
 
 const SCREEN_W = Dimensions.get('window').width;
 
-// ─── DADOS MOCK: usados como fallback se o backend falhar ────────────────────
-const MOCK_AGUA    = [60, 75, 55, 80, 65, 40, 45];
-const MOCK_ENERGIA = [35, 42, 30, 50, 38, 25, 20];
-const MOCK_VAMPIRO = [15, 18, 12, 20, 16, 10, 8];
+// ─── DADOS INICIAIS ZERADOS (sem mock) ───────────────────────────────────────
+const MOCK_AGUA    = [0, 0, 0, 0, 0, 0, 0];
+const MOCK_ENERGIA = [0, 0, 0, 0, 0, 0, 0];
+const MOCK_VAMPIRO = [0, 0, 0, 0, 0, 0, 0];
 
 // ─── FIX WEB: estilo do ScrollView para habilitar scroll com mouse na web ────
 const webScrollStyle = Platform.select({
@@ -134,14 +135,14 @@ export default function RelatoriosScreen() {
   useEffect(() => {
     const buscarDadosSemanais = async () => {
       if (!user?.id) {
-        // Se não há usuário logado, usa os dados mock
-        setDadosSemanais(prev => ({
-          ...prev,
-          agua: MOCK_AGUA,
-          energia: MOCK_ENERGIA,
-          vampiro: MOCK_VAMPIRO,
-        }));
-        setUsandoMock(true);
+        setDadosSemanais({
+          dias: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'],
+          agua:    [0, 0, 0, 0, 0, 0, 0],
+          energia: [0, 0, 0, 0, 0, 0, 0],
+          vampiro: [0, 0, 0, 0, 0, 0, 0],
+        });
+        setTotaisSemana({ agua: 0, energia: 0, vampiro: 0 });
+        setUsandoMock(false);
         setIsLoading(false);
         return;
       }
@@ -170,35 +171,26 @@ export default function RelatoriosScreen() {
           });
           setUsandoMock(false);
         } else {
-          // Sem dados ainda — exibe mock para demonstração
-          setDadosSemanais(prev => ({
-            ...prev,
-            agua: MOCK_AGUA,
-            energia: MOCK_ENERGIA,
-            vampiro: MOCK_VAMPIRO,
-          }));
-          setTotaisSemana({
-            agua:    MOCK_AGUA.reduce((a, b) => a + b, 0),
-            energia: MOCK_ENERGIA.reduce((a, b) => a + b, 0),
-            vampiro: MOCK_VAMPIRO.reduce((a, b) => a + b, 0),
+          setDadosSemanais({
+            dias:    dados.dias,
+            agua:    [0, 0, 0, 0, 0, 0, 0],
+            energia: [0, 0, 0, 0, 0, 0, 0],
+            vampiro: [0, 0, 0, 0, 0, 0, 0],
           });
-          setUsandoMock(true);
+          setTotaisSemana({ agua: 0, energia: 0, vampiro: 0 });
+          setUsandoMock(false);
         }
       } catch (error) {
-        // Fallback: mantém os dados mock se o backend não responder
+        // Fallback: mantém zeros se o backend não responder
         console.log('Erro ao buscar dados semanais:', error);
-        setDadosSemanais(prev => ({
-          ...prev,
-          agua: MOCK_AGUA,
-          energia: MOCK_ENERGIA,
-          vampiro: MOCK_VAMPIRO,
-        }));
-        setTotaisSemana({
-          agua:    MOCK_AGUA.reduce((a, b) => a + b, 0),
-          energia: MOCK_ENERGIA.reduce((a, b) => a + b, 0),
-          vampiro: MOCK_VAMPIRO.reduce((a, b) => a + b, 0),
+        setDadosSemanais({
+          dias: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'],
+          agua:    [0, 0, 0, 0, 0, 0, 0],
+          energia: [0, 0, 0, 0, 0, 0, 0],
+          vampiro: [0, 0, 0, 0, 0, 0, 0],
         });
-        setUsandoMock(true);
+        setTotaisSemana({ agua: 0, energia: 0, vampiro: 0 });
+        setUsandoMock(false);
       } finally {
         setIsLoading(false);
       }
@@ -367,30 +359,7 @@ export default function RelatoriosScreen() {
             )}
           </View>
 
-          {/* ─── CARD 2: TOTAIS DA SEMANA ─── */}
-          <View style={styles.card}>
-            <Text style={styles.title}>Totais da semana</Text>
-            <View style={styles.totaisRow}>
-              <View style={styles.totalItem}>
-                <Text style={[styles.totalVal, { color: colors.blue }]}>
-                  {somaAgua.toFixed(0)} L
-                </Text>
-                <Text style={styles.totalLabel}>Agua</Text>
-              </View>
-              <View style={styles.totalItem}>
-                <Text style={[styles.totalVal, { color: colors.gold }]}>
-                  {somaEnergia.toFixed(2)} kWh
-                </Text>
-                <Text style={styles.totalLabel}>Energia</Text>
-              </View>
-              <View style={styles.totalItem}>
-                <Text style={[styles.totalVal, { color: vampiroColor }]}>
-                  {somaVampiro.toFixed(2)} kWh
-                </Text>
-                <Text style={styles.totalLabel}>Vampiro</Text>
-              </View>
-            </View>
-          </View>
+
 
           {/* ─── CARD 3: GRÁFICO DE PIZZA ─── */}
           <View style={styles.card}>
@@ -417,6 +386,66 @@ export default function RelatoriosScreen() {
               )}
               <Text style={styles.pieNote}>Toque para saber sobre o Consumo Vampiro</Text>
             </TouchableOpacity>
+          </View>
+
+          {/* ─── CARD: ECONOMIA ESTIMADA DA SEMANA ─── */}
+          <View style={[styles.card, { borderColor: colors.teal + '44', borderWidth: 1 }]}>
+            <Text style={styles.title}>Economia estimada esta semana</Text>
+
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+              <View style={{
+                flex: 1, backgroundColor: colors.blue + '15',
+                borderRadius: 12, padding: 14, alignItems: 'center',
+              }}>
+                <Ionicons name="water" size={20} color={colors.blue} />
+                <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 4 }}>Agua</Text>
+                <Text style={{ color: colors.blue, fontWeight: 'bold', fontSize: 16, marginTop: 2 }}>
+                  R$ {(Math.max(0, (700 - somaAgua) * 0.0065)).toFixed(2)}
+                </Text>
+              </View>
+
+              <View style={{
+                flex: 1, backgroundColor: colors.gold + '15',
+                borderRadius: 12, padding: 14, alignItems: 'center',
+              }}>
+                <Ionicons name="flash" size={20} color={colors.gold} />
+                <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 4 }}>Energia</Text>
+                <Text style={{ color: colors.gold, fontWeight: 'bold', fontSize: 16, marginTop: 2 }}>
+                  R$ {(Math.max(0, (15 - somaEnergia) * 0.85)).toFixed(2)}
+                </Text>
+              </View>
+            </View>
+
+            <View style={{
+              backgroundColor: (colors.violet || '#A78BFA') + '15',
+              borderRadius: 12, padding: 12,
+              flexDirection: 'row', alignItems: 'center',
+              marginBottom: 12,
+            }}>
+              <Ionicons name="moon" size={18} color={colors.violet || '#A78BFA'} style={{ marginRight: 10 }} />
+              <View>
+                <Text style={{ color: colors.textMuted, fontSize: 11 }}>Consumo Stand-by (Vampiro)</Text>
+                <Text style={{ color: colors.violet || '#A78BFA', fontWeight: 'bold', fontSize: 15, marginTop: 2 }}>
+                  {somaVampiro.toFixed(2)} kWh consumidos
+                </Text>
+              </View>
+            </View>
+
+            <View style={{
+              backgroundColor: colors.teal + '15',
+              borderRadius: 12, padding: 14, alignItems: 'center',
+            }}>
+              <Text style={{ color: colors.textMuted, fontSize: 11 }}>Total economizado</Text>
+              <Text style={{ color: colors.teal, fontWeight: 'bold', fontSize: 26, marginTop: 4 }}>
+                R$ {(
+                  Math.max(0, (700 - somaAgua) * 0.0065) +
+                  Math.max(0, (15 - somaEnergia) * 0.85)
+                ).toFixed(2)}
+              </Text>
+              <Text style={{ color: colors.textMuted, fontSize: 10, marginTop: 4 }}>
+                vs. media brasileira de consumo semanal
+              </Text>
+            </View>
           </View>
 
         </View>

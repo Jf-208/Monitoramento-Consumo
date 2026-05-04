@@ -65,16 +65,15 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Logo centralizada */}
-      <View style={{ alignItems: 'center', marginBottom: 32, marginTop: Platform.select({ web: 40, default: 20 }) }}>
+      {/* Logo completa */}
+      <View style={{ alignItems: 'center', marginBottom: 24, marginTop: Platform.select({ web: 40, default: 16 }), marginLeft: -15 }}>
         <Image
-          source={require('../../../assets/icon.png')}
-          style={{ width: 100, height: 100, borderRadius: 24 }}
+          source={require('../../../assets/Wave2.png')}
+          style={{ width: 380, height: 160 }}
           resizeMode="contain"
         />
       </View>
 
-      <Text style={styles.title}>Bem-vindo</Text>
       <Text style={styles.subtitle}>Faca login para continuar</Text>
 
       <TextInput

@@ -1,11 +1,37 @@
 // sustainability.js
-// Funcoes utilitarias de calculo de nivel sustentavel.
-// Usadas na Home e no Profile para exibir o nivel do usuario.
+// Funcoes utilitarias de calculo de nivel sustentavel e economia em reais.
+// Usadas na Home, Profile e Reports.
 
-export function calcularNivel(percentualAgua, percentualEnergia) {
+// Tarifas medias brasileiras (ANEEL/SNIS 2023)
+const TARIFA_AGUA_POR_LITRO = 6.50 / 1000;  // R$ 6,50 por m3 -> por litro
+const TARIFA_ENERGIA_POR_KWH = 0.85;         // R$ 0,85 por kWh
+
+/**
+ * Calcula o nivel sustentavel baseado nos percentuais de consumo
+ */
+export function calcularNivel(percentualAgua = 0, percentualEnergia = 0) {
   const medio = (percentualAgua + percentualEnergia) / 2;
   if (medio <= 50) return { label: 'Otimo!', cor: '#1D9E75', descricao: 'Voce esta bem abaixo da media brasileira.' };
   if (medio <= 80) return { label: 'Bom', cor: '#378ADD', descricao: 'Consumo dentro da faixa aceitavel.' };
   if (medio <= 100) return { label: 'Atencao', cor: '#EF9F27', descricao: 'Proximo da meta semanal. Reduza um pouco.' };
-  return { label: 'Critico', cor: '#E24B4A', descricao: 'Consumo acima da meta. Veja as dicas.' };
+  return { label: 'Critico', cor: '#E24B4A', descricao: 'Consumo acima da meta. Veja as dicas!' };
+}
+
+/**
+ * Calcula o valor economizado em reais
+ * Retorna valores NUMERICOS (agua, energia, total) para uso com .toFixed()
+ * @param {number} aguaPoupadaL - litros poupados vs meta
+ * @param {number} energiaPoupadaKwh - kWh poupados vs meta
+ * @returns {{ total: number, agua: number, energia: number }}
+ */
+export function calcularEconomiaReais(aguaPoupadaL = 0, energiaPoupadaKwh = 0) {
+  const economiaAgua    = Math.max(0, parseFloat(aguaPoupadaL) || 0) * TARIFA_AGUA_POR_LITRO;
+  const economiaEnergia = Math.max(0, parseFloat(energiaPoupadaKwh) || 0) * TARIFA_ENERGIA_POR_KWH;
+  const total           = economiaAgua + economiaEnergia;
+
+  return {
+    total:    parseFloat(total.toFixed(2)),
+    agua:     parseFloat(economiaAgua.toFixed(2)),
+    energia:  parseFloat(economiaEnergia.toFixed(2)),
+  };
 }

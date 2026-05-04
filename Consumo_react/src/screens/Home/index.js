@@ -3,7 +3,7 @@
 // Exibe nivel sustentavel calculado dinamicamente, estatisticas reais
 // de consumo semanal do backend, e uma "Dica do Dia" que muda a cada 24h.
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, Image, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { MotiView } from 'moti';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,10 +15,8 @@ import StatBar from '../../components/intermediate/StatBar';
 import { DICAS } from '../../constants/data';
 import { calcularNivel } from '../../utils/sustainability';
 
-// Chave e intervalo da dica diaria
-const DICA_KEY           = '@dicaDoDia';
-const DICA_TIMESTAMP_KEY = '@dicaDoDiaTimestamp';
-const UM_DIA_MS          = 24 * 60 * 60 * 1000;
+// Intervalo da dica diaria
+const UM_DIA_MS = 24 * 60 * 60 * 1000;
 
 export default function HomeScreen({ navigation }) {
   const { user }    = useContext(AuthContext);
@@ -39,6 +37,10 @@ export default function HomeScreen({ navigation }) {
   // Dica do Dia — filtra alertas (queremos dicas positivas na Home)
   const dicasValidas = DICAS.filter(d => d.categoria !== 'alerta');
   const [dicaDoDia, setDicaDoDia] = useState(null);
+
+  // Chaves isoladas por usuario (PASSO 8)
+  const DICA_KEY           = `@dicaDoDia_${user?.id ?? 'guest'}`;
+  const DICA_TIMESTAMP_KEY = `@dicaDoDiaTimestamp_${user?.id ?? 'guest'}`;
 
   useEffect(() => {
     const carregarDicaDoDia = async () => {
@@ -65,7 +67,7 @@ export default function HomeScreen({ navigation }) {
     };
 
     carregarDicaDoDia();
-  }, []);
+  }, [user?.id]);
 
   // FIX WEB: overflow:'auto' habilita scroll com mouse wheel
   const webScrollStyle = Platform.select({
@@ -84,6 +86,13 @@ export default function HomeScreen({ navigation }) {
       bounces={false}
       keyboardShouldPersistTaps="handled"
     >
+      <View style={{ alignItems: 'center', marginBottom: 16, marginTop: 8, marginLeft: -15 }}>
+        <Image
+          source={require('../../../assets/Wave.png')}
+          style={{ width: 220, height: 100 }}
+          resizeMode="contain"
+        />
+      </View>
       <Text style={styles.greeting}>Ola, {user?.nome || 'Usuario'}</Text>
       <Text style={styles.title}>Seu painel</Text>
 
