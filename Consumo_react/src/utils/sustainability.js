@@ -1,5 +1,6 @@
 // sustainability.js
 // Funcoes utilitarias de calculo de nivel sustentavel e economia em reais.
+// Retorna objetos de nivel contendo emoji e iconName para exibicao.
 // Usadas na Home, Profile e Reports.
 
 // Tarifas medias brasileiras (ANEEL/SNIS 2023)
@@ -11,10 +12,26 @@ const TARIFA_ENERGIA_POR_KWH = 0.85;         // R$ 0,85 por kWh
  */
 export function calcularNivel(percentualAgua = 0, percentualEnergia = 0) {
   const medio = (percentualAgua + percentualEnergia) / 2;
-  if (medio <= 50) return { label: 'Otimo!', cor: '#1D9E75', descricao: 'Voce esta bem abaixo da media brasileira.' };
-  if (medio <= 80) return { label: 'Bom', cor: '#378ADD', descricao: 'Consumo dentro da faixa aceitavel.' };
-  if (medio <= 100) return { label: 'Atencao', cor: '#EF9F27', descricao: 'Proximo da meta semanal. Reduza um pouco.' };
-  return { label: 'Critico', cor: '#E24B4A', descricao: 'Consumo acima da meta. Veja as dicas!' };
+  if (medio <= 50) return {
+    label: 'Ótimo!', cor: '#1D9E75',
+    descricao: 'Você está bem abaixo da média brasileira.',
+    emoji: '🌿', iconName: 'leaf',
+  };
+  if (medio <= 80) return {
+    label: 'Bom', cor: '#378ADD',
+    descricao: 'Consumo dentro da faixa aceitável.',
+    emoji: '👍', iconName: 'thumbs-up',
+  };
+  if (medio <= 100) return {
+    label: 'Atenção', cor: '#EF9F27',
+    descricao: 'Próximo da meta. Reduza um pouco.',
+    emoji: '⚠️', iconName: 'warning',
+  };
+  return {
+    label: 'Crítico', cor: '#E24B4A',
+    descricao: 'Consumo acima da meta. Veja as dicas!',
+    emoji: '🔴', iconName: 'alert-circle',
+  };
 }
 
 /**

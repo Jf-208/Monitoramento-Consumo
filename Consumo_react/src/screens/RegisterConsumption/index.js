@@ -1,13 +1,13 @@
 // RegisterConsumption/index.js
-// Tela de registro de consumo com 3 sub-abas internas: Agua | Energia | Outros.
-// Cada sub-aba tem formulario especifico com calculos automaticos.
-// Apos registrar, chama buscarResumoSemanal() + buscarHistoricoTotal() para reatividade.
-// Usa InlineMessage para feedback (nunca Alert.alert).
-
+// Tela de registro de consumo com 3 sub-abas internas: Agua | Energia | Outros Consumos.
+// Cada sub-aba tem formulario especifico com calculos automaticos e campo de nome para todos.
+// Apos registrar, atualiza os contextos globais para manter a reatividade.
+// Usa InlineMessage para feedback e DatePicker adaptado para web.
+// Permite edicao e exclusao de registros (modal completo).
 import React, { useState, useContext, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  Platform, StyleSheet,
+  Platform, StyleSheet, Modal,
 } from 'react-native';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
@@ -45,8 +45,39 @@ const TARIFA_ENERGIA_KWH = 0.87;   // R$/kWh
 function DateField({ date, onChange, colors }) {
   const [show, setShow] = useState(false);
 
+  // FIX WEB: @react-native-community/datetimepicker nao suporta web
+  if (Platform.OS === 'web') {
+    const dateStr = date.toISOString().split('T')[0];
+    return (
+      <View style={{
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: colors.surface, borderWidth: 1,
+        borderColor: colors.border, borderRadius: 12,
+        paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12,
+      }}>
+        <Ionicons name="calendar-outline" size={18} color={colors.textMuted} style={{ marginRight: 8 }} />
+        <input
+          type="date"
+          value={dateStr}
+          max={new Date().toISOString().split('T')[0]}
+          onChange={(e) => {
+            if (e.target.value) {
+              const [y, m, d] = e.target.value.split('-').map(Number);
+              onChange(new Date(y, m - 1, d));
+            }
+          }}
+          style={{
+            background: 'transparent', border: 'none', outline: 'none',
+            color: colors.text, fontSize: 14, cursor: 'pointer', flex: 1,
+          }}
+        />
+      </View>
+    );
+  }
+
+  // Mobile: comportamento original
   const handleChange = (event, selectedDate) => {
-    setShow(Platform.OS === 'ios'); // iOS mantem aberto
+    setShow(Platform.OS === 'ios');
     if (selectedDate) onChange(selectedDate);
   };
 
@@ -54,15 +85,10 @@ function DateField({ date, onChange, colors }) {
     <View>
       <TouchableOpacity
         style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.surface,
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: 12,
-          paddingHorizontal: 14,
-          paddingVertical: 12,
-          marginBottom: 12,
+          flexDirection: 'row', alignItems: 'center',
+          backgroundColor: colors.surface, borderWidth: 1,
+          borderColor: colors.border, borderRadius: 12,
+          paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12,
         }}
         onPress={() => setShow(true)}
       >
@@ -71,7 +97,6 @@ function DateField({ date, onChange, colors }) {
           {date.toLocaleDateString('pt-BR')}
         </Text>
       </TouchableOpacity>
-
       {show && (
         <DateTimePicker
           value={date}
@@ -92,8 +117,11 @@ export default function RegisterScreen() {
   const {
     salvarConsumoBackend,
     buscarResumoSemanal,
+    buscarResumoMensal,
     buscarHistoricoTotal,
     registros,
+    editarRegistro,
+    deletarRegistro,
   } = useContext(ConsumptionContext);
 
   // Sub-aba ativa
@@ -109,10 +137,12 @@ export default function RegisterScreen() {
   const [tipoAgua, setTipoAgua] = useState('banho');
   const [tempoAgua, setTempoAgua] = useState('');
   const [dataAgua, setDataAgua] = useState(new Date());
+  const [nomeAguaOutro, setNomeAguaOutro] = useState('');
 
   // ─── ESTADO: ABA ENERGIA ───────────────────────────────────────────────
   const [aparelhoId, setAparelhoId] = useState('chuveiro');
   const [wattsCustom, setWattsCustom] = useState('');
+  const [nomeEnergiaCustom, setNomeEnergiaCustom] = useState('');
   const [tempoEnergia, setTempoEnergia] = useState('');
   const [dataEnergia, setDataEnergia] = useState(new Date());
 
@@ -121,6 +151,14 @@ export default function RegisterScreen() {
   const [unidadeOutros, setUnidadeOutros] = useState('');
   const [valorOutros, setValorOutros] = useState('');
   const [dataOutros, setDataOutros] = useState(new Date());
+
+  // Estados para modal de edicao
+  const [editandoRegistro, setEditandoRegistro] = useState(null);
+  const [editNome, setEditNome] = useState('');
+  const [editValor, setEditValor] = useState('');
+  const [editValorMon, setEditValorMon] = useState('');
+  const [editData, setEditData] = useState(new Date());
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
 
   // ─── CALCULOS ─────────────────────────────────────────────────────────
   const fatorAgua = TIPOS_AGUA.find(t => t.id === tipoAgua)?.fator || 5;
@@ -151,15 +189,22 @@ export default function RegisterScreen() {
       mostrarFeedback('aviso', 'Informe o tempo de uso em minutos.');
       return;
     }
+    if (tipoAgua === 'outro' && !nomeAguaOutro.trim()) {
+      mostrarFeedback('aviso', 'Informe o nome do uso para continuar.');
+      return;
+    }
     setSalvando(true);
     const resultado = await salvarConsumoBackend('agua', litros, 'L', false, {
+      nome_custom: tipoAgua === 'outro' ? nomeAguaOutro.trim() : null,
       data_personalizada: formatarDataISO(dataAgua),
     });
     if (resultado.success) {
-      mostrarFeedback('sucesso', `Registrado: ${litros.toFixed(1)} L de agua`);
+      mostrarFeedback('sucesso', `Registrado: ${litros.toFixed(1)} L de água`);
       setTempoAgua('');
+      setNomeAguaOutro('');
       setDataAgua(new Date());
       await buscarResumoSemanal();
+      await buscarResumoMensal();
       await buscarHistoricoTotal();
     } else {
       mostrarFeedback('erro', resultado.message);
@@ -173,20 +218,27 @@ export default function RegisterScreen() {
       mostrarFeedback('aviso', 'Informe o tempo de uso em minutos.');
       return;
     }
+    if (aparelhoId === 'custom' && !nomeEnergiaCustom.trim()) {
+      mostrarFeedback('aviso', 'Informe o nome do aparelho.');
+      return;
+    }
     if (aparelhoId === 'custom' && (!wattsCustom || parseFloat(wattsCustom) <= 0)) {
       mostrarFeedback('aviso', 'Informe a potencia em Watts.');
       return;
     }
     setSalvando(true);
     const resultado = await salvarConsumoBackend('energia', kWh, 'kWh', false, {
+      nome_custom: aparelhoId === 'custom' ? nomeEnergiaCustom.trim() : null,
       data_personalizada: formatarDataISO(dataEnergia),
     });
     if (resultado.success) {
       mostrarFeedback('sucesso', `Registrado: ${kWh.toFixed(4)} kWh`);
       setTempoEnergia('');
       setWattsCustom('');
+      setNomeEnergiaCustom('');
       setDataEnergia(new Date());
       await buscarResumoSemanal();
+      await buscarResumoMensal();
       await buscarHistoricoTotal();
     } else {
       mostrarFeedback('erro', resultado.message);
@@ -217,6 +269,7 @@ export default function RegisterScreen() {
       setValorOutros('');
       setDataOutros(new Date());
       await buscarResumoSemanal();
+      await buscarResumoMensal();
       await buscarHistoricoTotal();
     } else {
       mostrarFeedback('erro', resultado.message);
@@ -242,16 +295,19 @@ export default function RegisterScreen() {
     tab: {
       flex: 1,
       paddingVertical: 10,
+      paddingHorizontal: 4,
       borderRadius: 10,
       alignItems: 'center',
+      justifyContent: 'center',
     },
     tabActive: {
       backgroundColor: colors.blue,
     },
     tabText: {
-      fontSize: 13,
+      fontSize: 11,
       fontWeight: '600',
       color: colors.textMuted,
+      textAlign: 'center',
     },
     tabTextActive: {
       color: '#fff',
@@ -414,6 +470,19 @@ export default function RegisterScreen() {
           })}
         </View>
 
+        {tipoAgua === 'outro' && (
+          <>
+            <Text style={styles.label}>Nome do uso</Text>
+            <TextInput
+              style={styles.input}
+              placeholder='Ex: "Rega de plantas", "Piscina"'
+              placeholderTextColor={colors.textMuted}
+              value={nomeAguaOutro}
+              onChangeText={setNomeAguaOutro}
+            />
+          </>
+        )}
+
         <Text style={styles.label}>Tempo de uso (min)</Text>
         <TextInput
           style={styles.input}
@@ -486,6 +555,14 @@ export default function RegisterScreen() {
 
         {aparelhoId === 'custom' && (
           <>
+            <Text style={styles.label}>Nome do aparelho</Text>
+            <TextInput
+              style={styles.input}
+              placeholder='Ex: "Ferro de passar", "Forno elétrico"'
+              placeholderTextColor={colors.textMuted}
+              value={nomeEnergiaCustom}
+              onChangeText={setNomeEnergiaCustom}
+            />
             <Text style={styles.label}>Potencia (Watts)</Text>
             <TextInput
               style={styles.input}
@@ -587,6 +664,15 @@ export default function RegisterScreen() {
     </MotiView>
   );
 
+  // ─── FUNCAO: abrir modal de edicao ─────────────────────────────────
+  const abrirEdicao = (registro) => {
+    setEditandoRegistro(registro);
+    setEditNome(registro.nome_custom || '');
+    setEditValor(String(registro.valor || ''));
+    setEditValorMon(registro.valor_monetario ? String(registro.valor_monetario) : '');
+    setEditData(registro.data_registro ? new Date(registro.data_registro) : new Date());
+  };
+
   // ─── RENDER: HISTORICO ────────────────────────────────────────────────
   const renderHistorico = () => (
     <View>
@@ -597,39 +683,34 @@ export default function RegisterScreen() {
         </Text>
       ) : (
         registros.map(r => {
-          // Determinar cor do icone por tipo
           const tipoConfig = {
             agua:    { icon: 'water',           color: colors.blue },
             energia: { icon: 'flash',           color: colors.gold },
             outros:  { icon: 'receipt-outline',  color: colors.violet || '#8B5CF6' },
           };
           const cfg = tipoConfig[r.tipo_consumo] || tipoConfig.outros;
-
           return (
-            <View key={r.id} style={styles.historicoItem}>
+            <View key={r.id} style={[styles.historicoItem, { flexDirection: 'row', alignItems: 'center' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                <View style={{
-                  width: 32, height: 32, borderRadius: 16,
-                  backgroundColor: cfg.color + '22',
-                  alignItems: 'center', justifyContent: 'center',
-                  marginRight: 10,
-                }}>
+                <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: cfg.color + '22', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
                   <Ionicons name={cfg.icon} size={16} color={cfg.color} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.historicoTipo}>
-                    {r.tipo_consumo === 'outros' ? (r.nome_custom || 'Outros') : r.tipo_consumo}
+                    {r.nome_custom || (r.tipo_consumo === 'outros' ? 'Outros' : r.tipo_consumo.charAt(0).toUpperCase() + r.tipo_consumo.slice(1))}
                   </Text>
-                  <Text style={styles.historicoData}>
-                    {r.data_registro ? new Date(r.data_registro).toLocaleDateString('pt-BR') : '—'}
-                  </Text>
+                  <Text style={styles.historicoData}>{r.data_registro ? new Date(r.data_registro).toLocaleDateString('pt-BR') : '—'}</Text>
                 </View>
               </View>
-              <Text style={[styles.historicoValor, { color: cfg.color }]}>
-                {r.tipo_consumo === 'outros'
-                  ? `R$ ${(r.valor_monetario || 0).toFixed(2)}`
-                  : `${r.valor} ${r.unidade_medida}`}
+              <Text style={[styles.historicoValor, { color: cfg.color, marginRight: 8 }]}>
+                {r.tipo_consumo === 'outros' ? `R$ ${(r.valor_monetario || 0).toFixed(2)}` : `${r.valor} ${r.unidade_medida}`}
               </Text>
+              <TouchableOpacity onPress={() => abrirEdicao(r)} style={{ padding: 6 }}>
+                <Ionicons name="pencil-outline" size={16} color={colors.textMuted} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={async () => { const res = await deletarRegistro(r.id); mostrarFeedback(res.success ? 'sucesso' : 'erro', res.message); }} style={{ padding: 6 }}>
+                <Ionicons name="trash-outline" size={16} color={colors.danger || '#FF5A72'} />
+              </TouchableOpacity>
             </View>
           );
         })
@@ -641,16 +722,16 @@ export default function RegisterScreen() {
   const abas = [
     { id: 'agua',    label: 'Água',    icon: 'water' },
     { id: 'energia', label: 'Energia', icon: 'flash' },
-    { id: 'outros',  label: 'Outros',  icon: 'receipt-outline' },
+    { id: 'outros',  label: 'Outros Consumos',  icon: 'receipt-outline' },
   ];
 
-  // FIX WEB: overflow:'auto' habilita scroll com mouse wheel
   const webScrollStyle = Platform.select({
     web: { overflow: 'auto', height: '100%' },
     default: {},
   });
 
   return (
+    <>
     <ScrollView
       style={[styles.scrollContainer, webScrollStyle]}
       contentContainerStyle={styles.inner}
@@ -661,48 +742,67 @@ export default function RegisterScreen() {
       bounces={false}
       keyboardShouldPersistTaps="handled"
     >
-      {/* Sub-abas no topo */}
       <View style={styles.tabsRow}>
         {abas.map(aba => (
-          <TouchableOpacity
-            key={aba.id}
-            style={[
-              styles.tab,
-              abaAtiva === aba.id && styles.tabActive,
-            ]}
-            onPress={() => {
-              setAbaAtiva(aba.id);
-              setFeedback({ tipo: '', mensagem: '' });
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons
-                name={aba.icon}
-                size={14}
-                color={abaAtiva === aba.id ? '#fff' : colors.textMuted}
-                style={{ marginRight: 4 }}
-              />
-              <Text style={[
-                styles.tabText,
-                abaAtiva === aba.id && styles.tabTextActive,
-              ]}>
+          <TouchableOpacity key={aba.id} style={[styles.tab, abaAtiva === aba.id && styles.tabActive]} onPress={() => { setAbaAtiva(aba.id); setFeedback({ tipo: '', mensagem: '' }); }}>
+            <View style={{ alignItems: 'center' }}>
+              <Ionicons name={aba.icon} size={14} color={abaAtiva === aba.id ? '#fff' : colors.textMuted} />
+              <Text style={[styles.tabText, abaAtiva === aba.id && styles.tabTextActive, { marginTop: 2 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.65}>
                 {aba.label}
               </Text>
             </View>
           </TouchableOpacity>
         ))}
       </View>
-
-      {/* Feedback inline */}
       <InlineMessage tipo={feedback.tipo} mensagem={feedback.mensagem} />
-
-      {/* Formulario da sub-aba ativa */}
       {abaAtiva === 'agua' && renderAgua()}
       {abaAtiva === 'energia' && renderEnergia()}
       {abaAtiva === 'outros' && renderOutros()}
-
-      {/* Lista de historico abaixo do formulario */}
       {renderHistorico()}
     </ScrollView>
+
+    <Modal animationType="slide" transparent={true} visible={!!editandoRegistro} onRequestClose={() => setEditandoRegistro(null)}>
+      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' }}>
+        <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 }}>
+          <Text style={{ color: colors.text, fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Editar Registro</Text>
+          {editandoRegistro?.tipo_consumo !== 'outros' ? (
+            <><Text style={styles.label}>Nome do registro (opcional)</Text><TextInput style={styles.input} value={editNome} onChangeText={setEditNome} placeholderTextColor={colors.textMuted} placeholder='Ex: "Banho longo", "Chuveiro quente"' /></>
+          ) : (
+            <><Text style={styles.label}>Nome</Text><TextInput style={styles.input} value={editNome} onChangeText={setEditNome} placeholderTextColor={colors.textMuted} placeholder="Nome" /></>
+          )}
+          {editandoRegistro?.tipo_consumo === 'outros' && (
+            <><Text style={styles.label}>Valor (R$)</Text><TextInput style={styles.input} keyboardType="numeric" value={editValorMon} onChangeText={setEditValorMon} placeholderTextColor={colors.textMuted} placeholder="0.00" /></>
+          )}
+          {editandoRegistro?.tipo_consumo !== 'outros' && (
+            <><Text style={styles.label}>Quantidade ({editandoRegistro?.unidade_medida})</Text><TextInput style={styles.input} keyboardType="numeric" value={editValor} onChangeText={setEditValor} placeholderTextColor={colors.textMuted} placeholder="0" /></>
+          )}
+          <Text style={styles.label}>Data</Text>
+          <DateField date={editData} onChange={setEditData} colors={colors} />
+          <TouchableOpacity style={[styles.registerBtn, { backgroundColor: colors.teal || '#2EDCB0' }, salvandoEdicao && styles.registerBtnDisabled]} disabled={salvandoEdicao}
+            onPress={async () => {
+              setSalvandoEdicao(true);
+              const payload = {
+                data_registro: editData.toISOString(),
+                nome_custom: editNome.trim() || null,
+              };
+              if (editandoRegistro.tipo_consumo === 'outros') {
+                payload.valor_monetario = parseFloat(editValorMon) || editandoRegistro.valor_monetario;
+              } else {
+                payload.valor = parseFloat(editValor) || editandoRegistro.valor;
+              }
+              const res = await editarRegistro(editandoRegistro.id, payload);
+              mostrarFeedback(res.success ? 'sucesso' : 'erro', res.message);
+              if (res.success) setEditandoRegistro(null);
+              setSalvandoEdicao(false);
+            }}>
+            <Text style={styles.registerBtnText}>{salvandoEdicao ? 'Salvando...' : 'Salvar Alterações'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setEditandoRegistro(null)} style={{ marginTop: 12, alignItems: 'center' }}>
+            <Text style={{ color: colors.textMuted, fontSize: 14 }}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+    </>
   );
 }

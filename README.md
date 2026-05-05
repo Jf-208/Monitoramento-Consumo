@@ -4,6 +4,17 @@ Bem-vindo à documentação oficial do projeto **Wavunder** (anteriormente "Onda
 
 ---
 
+## Funcionalidades
+
+- **Dashboard (Home):** Consumo Mensal (últimos 30 dias) de água e energia com gasto em R$ por categoria
+- **Registrar Consumo:** 3 abas — Água (com cálculo automático L/min), Energia (por aparelho ou customizado com nome), Outros Consumos (nome + valor em R$ + unidade opcional)
+- **Relatórios:** Gráfico de barras semanal (Seg→Dom fixo) + gráfico de pizza normalizado em R$
+- **Perfil:** Nível sustentável com emoji/ícone, card de gasto histórico colapsável, apagar conta
+- **Edição de registros:** Cada registro do histórico pode ser editado (nome, valor, data) ou apagado individualmente
+- **Suporte web:** DatePicker com fallback para `<input type="date">` nativo na web
+
+---
+
 ## Visão Geral da Arquitetura
 
 O projeto foi dividido em duas partes principais, seguindo o padrão de **Clean Architecture** e desacoplamento:

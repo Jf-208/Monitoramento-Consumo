@@ -3,7 +3,7 @@
 // Contem formulario (nome, e-mail, senha) com PasswordInput e toggle de visibilidade.
 // Feedback de erro/validacao via InlineMessage (sem alert nativo).
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Platform, Image } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
 import { AuthContext } from '../../contexts/AuthContext';
 import { ThemeContext } from '../../contexts/ThemeContext';
@@ -90,8 +90,14 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Criar Conta</Text>
-      <Text style={styles.subtitle}>Junte-se ao Wavunder</Text>
+      <View style={{ alignItems: 'center', marginBottom: -20, marginTop: Platform.select({ web: 20, default: 0 }) }}>
+        <Image
+          source={require('../../../assets/Wave.png')}
+          style={{ width: 600, height: 350 }}
+          resizeMode="contain"
+        />
+      </View>
+      <Text style={[styles.title, { textAlign: 'center', marginBottom: 24 }]}>Criar Conta</Text>
 
       {/* Feedback in-app */}
       {mensagem && (

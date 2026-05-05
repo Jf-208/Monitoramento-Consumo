@@ -97,10 +97,10 @@ export default function LoginScreen({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {/* Logo */}
-      <View style={{ alignItems: 'center', marginBottom: 24, marginTop: Platform.select({ web: 40, default: 16 }) }}>
+      <View style={{ alignItems: 'center', marginBottom: -20, marginTop: Platform.select({ web: -30, default: 0 }) }}>
         <Image
-          source={require('../../../assets/Wave2.png')}
-          style={{ width: 300, height: 130 }}
+          source={require('../../../assets/Wave.png')}
+          style={{ width: 600, height: 350 }}
           resizeMode="contain"
         />
       </View>

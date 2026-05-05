@@ -99,8 +99,8 @@ export default function EsqueciSenhaScreen({ navigation }) {
         default: {},
       }),
     },
-    title: { fontSize: 28, fontWeight: '800', color: colors.text, marginBottom: 8 },
-    subtitle: { fontSize: 15, color: colors.textSub, marginBottom: 32, lineHeight: 22 },
+    title: { fontSize: 28, fontWeight: '800', color: colors.text, marginBottom: 8, textAlign: 'center' },
+    subtitle: { fontSize: 15, color: colors.textSub, marginBottom: 32, lineHeight: 22, textAlign: 'center' },
     input: {
       backgroundColor: colors.surface,
       borderWidth: 1,

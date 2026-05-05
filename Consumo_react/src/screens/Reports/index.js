@@ -74,9 +74,9 @@ function PieChartSVG({ data, size = 160, strokeWidth = 32 }) {
       </Svg>
 
       {/* Legenda abaixo do grafico */}
-      <View style={{ flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', marginTop: 12 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', marginTop: 16, width: '100%' }}>
         {data.map((item, index) => (
-          <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16, marginBottom: 4 }}>
+          <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 8, marginBottom: 8 }}>
             <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: item.color, marginRight: 6 }} />
             <Text style={{ color: item.legendFontColor, fontSize: 12 }}>
               {item.name} {item.population}%
@@ -219,7 +219,7 @@ export default function RelatoriosScreen() {
   const pieData = [
     { name: 'Água',    population: pctAgua    || 0, color: colors.blue,  legendFontColor: colors.textSub, legendFontSize: 12 },
     { name: 'Energia', population: pctEnergia || 0, color: colors.gold,  legendFontColor: colors.textSub, legendFontSize: 12 },
-    { name: 'Outros',  population: pctOutros  || 0, color: outrosColor,  legendFontColor: colors.textSub, legendFontSize: 12 },
+    { name: 'Outros Consumos',  population: pctOutros  || 0, color: outrosColor,  legendFontColor: colors.textSub, legendFontSize: 12 },
   ];
 
   const chartConfig = {
@@ -239,6 +239,7 @@ export default function RelatoriosScreen() {
     title: {
       color: colors.textSub, fontSize: 12,
       textTransform: 'uppercase', marginBottom: 16, fontWeight: 'bold',
+      textAlign: 'center', width: '100%'
     },
     loadingContainer: { alignItems: 'center', paddingVertical: 40 },
     loadingText: { color: colors.textMuted, marginTop: 8, fontSize: 12 },
@@ -261,7 +262,7 @@ export default function RelatoriosScreen() {
 
     // ─── GRAFICO DE PIZZA ───
     pieWrapper: { alignItems: 'center', marginVertical: 8 },
-    pieNote: { color: colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 6 },
+    pieNote: { color: colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 12, width: '100%' },
 
     // ─── CARD DE TOTAIS ───
     totaisRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
@@ -277,8 +278,8 @@ export default function RelatoriosScreen() {
       padding: 24, paddingBottom: 40,
     },
     modalDragIndicator: { width: 40, height: 5, backgroundColor: colors.border, borderRadius: 3, alignSelf: 'center', marginBottom: 16 },
-    modalTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text, marginBottom: 12 },
-    modalText: { fontSize: 16, color: colors.textSub, lineHeight: 24, marginBottom: 16 },
+    modalTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text, marginBottom: 12, textAlign: 'center' },
+    modalText: { fontSize: 16, color: colors.textSub, lineHeight: 24, marginBottom: 16, textAlign: 'center' },
     modalCloseBtn: { backgroundColor: colors.blue, padding: 16, borderRadius: 16, alignItems: 'center' },
     modalCloseText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
   });
@@ -349,7 +350,7 @@ export default function RelatoriosScreen() {
                   </View>
                   <View style={styles.legendItem}>
                     <View style={[styles.legendDot, { backgroundColor: outrosColor }]} />
-                    <Text style={styles.legendText}>Outros</Text>
+                    <Text style={styles.legendText}>Outros Consumos</Text>
                   </View>
                 </View>
               </>
@@ -395,22 +396,22 @@ export default function RelatoriosScreen() {
             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
               <View style={{
                 flex: 1, backgroundColor: colors.blue + '15',
-                borderRadius: 12, padding: 14, alignItems: 'center',
+                borderRadius: 12, padding: 14, alignItems: 'center', justifyContent: 'center'
               }}>
                 <Ionicons name="water" size={20} color={colors.blue} />
-                <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 4 }}>Água</Text>
-                <Text style={{ color: colors.blue, fontWeight: 'bold', fontSize: 16, marginTop: 2 }}>
+                <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 4, textAlign: 'center' }}>Água</Text>
+                <Text style={{ color: colors.blue, fontWeight: 'bold', fontSize: 16, marginTop: 2, textAlign: 'center' }}>
                   {totaisSemana.agua.toFixed(1)} L
                 </Text>
               </View>
 
               <View style={{
                 flex: 1, backgroundColor: colors.gold + '15',
-                borderRadius: 12, padding: 14, alignItems: 'center',
+                borderRadius: 12, padding: 14, alignItems: 'center', justifyContent: 'center'
               }}>
                 <Ionicons name="flash" size={20} color={colors.gold} />
-                <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 4 }}>Energia</Text>
-                <Text style={{ color: colors.gold, fontWeight: 'bold', fontSize: 16, marginTop: 2 }}>
+                <Text style={{ color: colors.textMuted, fontSize: 11, marginTop: 4, textAlign: 'center' }}>Energia</Text>
+                <Text style={{ color: colors.gold, fontWeight: 'bold', fontSize: 16, marginTop: 2, textAlign: 'center' }}>
                   {totaisSemana.energia.toFixed(2)} kWh
                 </Text>
               </View>
@@ -418,13 +419,13 @@ export default function RelatoriosScreen() {
 
             <View style={{
               backgroundColor: (outrosColor) + '15',
-              borderRadius: 12, padding: 12,
-              flexDirection: 'row', alignItems: 'center',
+              borderRadius: 12, padding: 14,
+              flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
             }}>
-              <Ionicons name="receipt-outline" size={18} color={outrosColor} style={{ marginRight: 10 }} />
-              <View>
-                <Text style={{ color: colors.textMuted, fontSize: 11 }}>Outros consumos</Text>
-                <Text style={{ color: outrosColor, fontWeight: 'bold', fontSize: 15, marginTop: 2 }}>
+              <Ionicons name="receipt-outline" size={20} color={outrosColor} style={{ marginBottom: 4 }} />
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ color: colors.textMuted, fontSize: 11, textAlign: 'center' }}>Outros consumos</Text>
+                <Text style={{ color: outrosColor, fontWeight: 'bold', fontSize: 16, marginTop: 2, textAlign: 'center' }}>
                   R$ {totaisSemana.outros.toFixed(2)}
                 </Text>
               </View>
@@ -452,7 +453,7 @@ export default function RelatoriosScreen() {
               <Text style={{ fontWeight: 'bold' }}>Energia</Text> → total de kWh consumidos esta semana.
             </Text>
             <Text style={styles.modalText}>
-              <Text style={{ fontWeight: 'bold' }}>Outros</Text> → total em R$ de outros consumos registrados.
+              <Text style={{ fontWeight: 'bold' }}>Outros Consumos</Text> → total em R$ de outros consumos registrados.
             </Text>
             <Text style={[styles.modalText, { fontSize: 13, fontStyle: 'italic' }]}>
               O grafico de pizza normaliza todos os valores para R$ para comparacao proporcional justa.

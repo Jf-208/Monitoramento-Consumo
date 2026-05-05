@@ -1,6 +1,7 @@
 # consumo_routes.py
 # Rotas da API responsaveis por registrar e consultar dados de consumo (agua, energia, outros).
 # Todas as rotas recebem ou retornam dados em formato JSON.
+# Inclui novas rotas para resumo-mensal, PUT /registro e DELETE /registro.
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -11,7 +12,7 @@ from typing import Optional
 from decimal import Decimal
 
 from src.database.connection import get_db
-from src.models.models import Consumo, Usuario
+from src.models.models import Consumo, Usuario, Meta
 
 consumo_router = APIRouter(prefix="/consumo", tags=["Consumo"])
 
@@ -120,19 +121,11 @@ def consumo_semanal(id_usuario: int, db: Session = Depends(get_db)):
             elif r.tipo_consumo == "outros":
                 outros[dia] += float(r.valor_monetario or 0)
 
-    # Labels dinamicos (hoje, ontem, dias da semana)
-    nomes_pt = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"]
-    hoje = agora.date()
-    ontem = hoje - timedelta(days=1)
+    # Labels FIXOS — sempre dia da semana, nunca "Hoje"/"Ontem"
+    nomes_pt = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
 
-    def label_dia(d):
-        if d == hoje:
-            return "Hoje"
-        if d == ontem:
-            return "Ontem"
-        return nomes_pt[d.weekday()]
-
-    labels = [label_dia(d) for d in dias_range]
+    # dias_range já está definido acima como os últimos 7 dias (mais antigo → mais recente)
+    labels = [nomes_pt[d.weekday()] for d in dias_range]
 
     return {
         "dias":    labels,
@@ -187,19 +180,73 @@ def resumo_semanal(id_usuario: int, db: Session = Depends(get_db)):
     }
 
 
-# ─── ROTA 4: Historico dos ultimos 50 registros ───────────────────────────────
+# ─── ROTA 4: Resumo mensal (ultimos 30 dias) ──────────────────────────────────
+
+@consumo_router.get("/resumo-mensal/{id_usuario}")
+def resumo_mensal(id_usuario: int, db: Session = Depends(get_db)):
+    """
+    Retorna os totais acumulados dos ultimos 30 dias para o usuario.
+    Usado na Home para exibir as StatBars mensais e o card de Gasto Mensal.
+    Calcula gastos em R$ diretamente no backend para evitar divergencia por arredondamento.
+    """
+    agora = datetime.now(timezone.utc)
+    trinta_dias_atras = agora - timedelta(days=30)
+
+    registros = (
+        db.query(Consumo)
+        .filter(
+            Consumo.id_usuario == id_usuario,
+            Consumo.data_registro >= trinta_dias_atras,
+        )
+        .all()
+    )
+
+    total_agua    = sum(float(r.valor) for r in registros if r.tipo_consumo == "agua")
+    total_energia = sum(float(r.valor) for r in registros if r.tipo_consumo == "energia")
+    total_outros  = sum(float(r.valor_monetario or 0) for r in registros if r.tipo_consumo == "outros")
+
+    # Metas de referencia mensal (base: media brasileira)
+    META_AGUA_MENSAL    = 3000.0   # litros
+    META_ENERGIA_MENSAL = 60.0     # kWh
+
+    percentual_agua    = min(100, round((total_agua / META_AGUA_MENSAL) * 100, 1))
+    percentual_energia = min(100, round((total_energia / META_ENERGIA_MENSAL) * 100, 1))
+
+    # Gastos em R$ calculados no backend (fonte unica de verdade)
+    gasto_agua_reais    = round(total_agua * 0.0065, 2)      # R$ 6,50/m3
+    gasto_energia_reais = round(total_energia * 0.87, 2)     # R$ 0,87/kWh
+    gasto_outros_reais  = round(total_outros, 2)
+    gasto_total_reais   = round(gasto_agua_reais + gasto_energia_reais + gasto_outros_reais, 2)
+
+    return {
+        "total_agua_L":          round(total_agua, 2),
+        "total_energia_kWh":     round(total_energia, 4),
+        "total_outros_reais":    round(total_outros, 2),
+        "percentual_agua":       percentual_agua,
+        "percentual_energia":    percentual_energia,
+        "meta_agua_L":           META_AGUA_MENSAL,
+        "meta_energia_kWh":      META_ENERGIA_MENSAL,
+        "gasto_agua_reais":      gasto_agua_reais,
+        "gasto_energia_reais":   gasto_energia_reais,
+        "gasto_outros_reais":    gasto_outros_reais,
+        "gasto_total_reais":     gasto_total_reais,
+    }
+
+
+# ─── ROTA 5: Historico dos ultimos 100 registros (ordem cronologica) ──────────
 
 @consumo_router.get("/historico/{id_usuario}")
 def historico_consumo(id_usuario: int, db: Session = Depends(get_db)):
     """
-    Retorna os ultimos 50 registros de consumo do usuario.
+    Retorna os ultimos 100 registros de consumo do usuario em ordem cronologica (ASC).
+    Mais antigo primeiro, como uma linha do tempo.
     Inclui nome_custom e valor_monetario para registros tipo 'outros'.
     """
     registros = (
         db.query(Consumo)
         .filter(Consumo.id_usuario == id_usuario)
-        .order_by(Consumo.data_registro.desc())
-        .limit(50)
+        .order_by(Consumo.data_registro.asc())
+        .limit(100)
         .all()
     )
 
@@ -217,7 +264,72 @@ def historico_consumo(id_usuario: int, db: Session = Depends(get_db)):
     ]
 
 
-# ─── ROTA 5: Apagar conta do usuario ─────────────────────────────────────────
+# ─── ROTA 6: Editar registro individual ──────────────────────────────────────
+
+class ConsumoEditar(BaseModel):
+    """Campos editaveis de um registro. tipo_consumo e id_usuario sao imutaveis."""
+    nome_custom: Optional[str] = None
+    valor: Optional[float] = None
+    unidade_medida: Optional[str] = None
+    valor_monetario: Optional[float] = None
+    data_registro: Optional[str] = None  # ISO 8601
+
+@consumo_router.put("/registro/{id_registro}")
+def editar_registro(id_registro: int, dados: ConsumoEditar, db: Session = Depends(get_db)):
+    """
+    Atualiza os campos enviados (nao nulos) de um registro existente.
+    tipo_consumo e id_usuario sao imutaveis — o frontend nunca envia esses campos.
+    """
+    registro = db.query(Consumo).filter(Consumo.id == id_registro).first()
+    if not registro:
+        raise HTTPException(status_code=404, detail="Registro não encontrado")
+
+    if dados.nome_custom is not None:
+        registro.nome_custom = dados.nome_custom or None  # string vazia vira None
+    if dados.valor is not None:
+        registro.valor = dados.valor
+    if dados.unidade_medida is not None:
+        registro.unidade_medida = dados.unidade_medida
+    if dados.valor_monetario is not None:
+        registro.valor_monetario = dados.valor_monetario
+    if dados.data_registro is not None:
+        try:
+            registro.data_registro = datetime.fromisoformat(dados.data_registro.replace("Z", "+00:00"))
+        except Exception:
+            pass  # mantem a data original se o parse falhar
+
+    db.commit()
+    db.refresh(registro)
+
+    return {
+        "id":              registro.id,
+        "tipo_consumo":    registro.tipo_consumo,
+        "nome_custom":     registro.nome_custom,
+        "valor":           float(registro.valor),
+        "valor_monetario": float(registro.valor_monetario) if registro.valor_monetario else None,
+        "unidade_medida":  registro.unidade_medida,
+        "data_registro":   registro.data_registro.isoformat() if registro.data_registro else None,
+        "mensagem":        "Registro atualizado com sucesso",
+    }
+
+
+# ─── ROTA 7: Apagar registro individual ──────────────────────────────────────
+
+@consumo_router.delete("/registro/{id_registro}")
+def apagar_registro(id_registro: int, db: Session = Depends(get_db)):
+    """
+    Apaga um unico registro de consumo pelo ID.
+    NAO confundir com /usuario/{id_usuario} que apaga o usuario inteiro.
+    """
+    registro = db.query(Consumo).filter(Consumo.id == id_registro).first()
+    if not registro:
+        raise HTTPException(status_code=404, detail="Registro não encontrado")
+    db.delete(registro)
+    db.commit()
+    return {"mensagem": "Registro apagado com sucesso"}
+
+
+# ─── ROTA 8: Apagar conta do usuario ─────────────────────────────────────────
 
 @consumo_router.delete("/usuario/{id_usuario}")
 def apagar_usuario(id_usuario: int, db: Session = Depends(get_db)):
@@ -228,6 +340,10 @@ def apagar_usuario(id_usuario: int, db: Session = Depends(get_db)):
     usuario = db.query(Usuario).filter(Usuario.id == id_usuario).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
-    db.delete(usuario)  # CASCADE apaga consumos automaticamente (configurado no model)
+    # Apaga dependências manualmente para contornar falhas de CASCADE no SQLite
+    db.query(Consumo).filter(Consumo.id_usuario == id_usuario).delete()
+    db.query(Meta).filter(Meta.id_usuario == id_usuario).delete()
+    
+    db.delete(usuario)
     db.commit()
     return {"mensagem": "Conta apagada com sucesso"}

@@ -105,7 +105,7 @@ export default function MainTabs({ navigation }) {
       <View style={styles.spacerHeader} />
 
       {/* Content: pointerEvents="box-none" = View nao bloqueia toques */}
-      <View style={styles.content} pointerEvents="box-none">
+      <View style={[styles.content, { pointerEvents: 'box-none' }]}>
         {renderScreen()}
       </View>
 

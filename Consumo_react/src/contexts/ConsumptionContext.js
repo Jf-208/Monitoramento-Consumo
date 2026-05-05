@@ -5,6 +5,7 @@
 // Agora tambem integra com o backend (Railway) para registrar e buscar consumos reais.
 // Dados sao prefixados com user.id para isolamento por conta.
 // Suporta tipo "outros" com valor monetario e data personalizada.
+// Inclui estados mensais (consumoMensalReal), e funcoes de edicao e exclusao (editarRegistro, deletarRegistro).
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,6 +28,21 @@ export const ConsumptionProvider = ({ children }) => {
     outros: 0,           // total R$ dos "outros" na semana
     metaAguaL: 700,
     metaEnergiaKwh: 15,
+    percentualAgua: 0,
+    percentualEnergia: 0,
+  });
+
+  // ─── ESTADO MENSAL (separado do semanal — nunca misture os dois) ──────────
+  const [consumoMensalReal, setConsumoMensalReal] = useState({
+    agua: 0,
+    energia: 0,
+    outros: 0,
+    gastoAguaReais: 0,
+    gastoEnergiaReais: 0,
+    gastoOutrosReais: 0,
+    gastoTotalReais: 0,
+    metaAguaL: 3000,
+    metaEnergiaKwh: 60,
     percentualAgua: 0,
     percentualEnergia: 0,
   });
@@ -90,6 +106,7 @@ export const ConsumptionProvider = ({ children }) => {
   useEffect(() => {
     if (user?.id && !isLoading) {
       buscarResumoSemanal();
+      buscarResumoMensal();
       buscarHistoricoTotal();
     }
   }, [user?.id, isLoading]);
@@ -224,6 +241,64 @@ export const ConsumptionProvider = ({ children }) => {
     }
   };
 
+  // ─── FUNCAO: Buscar resumo mensal do backend ──────────────────────────────
+  /**
+   * Busca os totais dos ultimos 30 dias no servidor.
+   * Estado independente do semanal — nunca troque um pelo outro.
+   */
+  const buscarResumoMensal = async () => {
+    if (!user?.id) return;
+    try {
+      const response = await api.get(`/consumo/resumo-mensal/${user.id}`);
+      const dados = response.data;
+      setConsumoMensalReal({
+        agua:               dados.total_agua_L        ?? 0,
+        energia:            dados.total_energia_kWh   ?? 0,
+        outros:             dados.total_outros_reais  ?? 0,
+        gastoAguaReais:     dados.gasto_agua_reais    ?? 0,
+        gastoEnergiaReais:  dados.gasto_energia_reais ?? 0,
+        gastoOutrosReais:   dados.gasto_outros_reais  ?? 0,
+        gastoTotalReais:    dados.gasto_total_reais   ?? 0,
+        metaAguaL:          dados.meta_agua_L         ?? 3000,
+        metaEnergiaKwh:     dados.meta_energia_kWh    ?? 60,
+        percentualAgua:     dados.percentual_agua     ?? 0,
+        percentualEnergia:  dados.percentual_energia  ?? 0,
+      });
+    } catch (error) {
+      console.log('Erro ao buscar resumo mensal:', error);
+    }
+  };
+
+  // ─── FUNCAO: Editar registro individual ────────────────────────────────────
+  const editarRegistro = async (idRegistro, dados) => {
+    if (!user?.id) return { success: false, message: 'Usuário não logado' };
+    try {
+      await api.put(`/consumo/registro/${idRegistro}`, dados);
+      await buscarResumoSemanal();
+      await buscarResumoMensal();
+      await buscarHistoricoTotal();
+      return { success: true, message: 'Registro atualizado com sucesso!' };
+    } catch (e) {
+      const msg = e?.response?.data?.detail || e?.message || 'Erro ao editar';
+      return { success: false, message: typeof msg === 'string' ? msg : JSON.stringify(msg) };
+    }
+  };
+
+  // ─── FUNCAO: Deletar registro individual ───────────────────────────────────
+  const deletarRegistro = async (idRegistro) => {
+    if (!user?.id) return { success: false, message: 'Usuário não logado' };
+    try {
+      await api.delete(`/consumo/registro/${idRegistro}`);
+      await buscarResumoSemanal();
+      await buscarResumoMensal();
+      await buscarHistoricoTotal();
+      return { success: true, message: 'Registro apagado!' };
+    } catch (e) {
+      const msg = e?.response?.data?.detail || e?.message || 'Erro ao apagar';
+      return { success: false, message: typeof msg === 'string' ? msg : JSON.stringify(msg) };
+    }
+  };
+
   return (
     <ConsumptionContext.Provider value={{
       // Dados de simulacao (sliders)
@@ -234,17 +309,21 @@ export const ConsumptionProvider = ({ children }) => {
       aguaPoupada, energiaPoupada,
       // Dados reais do backend
       consumoSemanalReal,
+      consumoMensalReal,
       historicoTotal,
       isLoadingBackend,
       // Historico de registros (lista completa)
       registros,
-      buscarRegistros: buscarHistoricoTotal, // reutiliza a mesma funcao
+      buscarRegistros: buscarHistoricoTotal,
       // Diagnostico de erros
       ultimoErroRegistro, setUltimoErroRegistro,
       // Funcoes de integracao com o servidor
       salvarConsumoBackend,
       buscarResumoSemanal,
+      buscarResumoMensal,
       buscarHistoricoTotal,
+      editarRegistro,
+      deletarRegistro,
     }}>
       {children}
     </ConsumptionContext.Provider>
