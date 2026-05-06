@@ -22,7 +22,6 @@ import sys
 import os
 import random
 from datetime import datetime, timedelta
-from passlib.context import CryptContext
 
 # ── Caminho do backend ────────────────────────────────────────────────────────
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -33,9 +32,11 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 from src.database.connection import SessionLocal, engine
 from src.models.base import Base
 from src.models.models import Usuario, Consumo
+# Reutiliza hash_senha do security.py — mesmo bcrypt direto, sem passlib
+# Garante compatibilidade com bcrypt 4+ (que removeu __about__ do passlib)
+from src.core.security import hash_senha
 
 # ── Configuração ──────────────────────────────────────────────────────────────
-pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 USUARIOS_DEMO = [
     {"nome": "Vitor",  "email": "vitor@wavunder.app",  "senha": "demo123", "perfil": "moderado"},
@@ -160,11 +161,11 @@ def main():
                     print(f"[SKIP] Usuário já existe: {dados['email']} (use --reset para recriar)")
                     continue
 
-            # Cria o usuário com senha hasheada
+            # Cria o usuário com senha hasheada via bcrypt direto (security.py)
             novo_usuario = Usuario(
                 nome=dados["nome"],
                 email=dados["email"],
-                senha=pwd_ctx.hash(dados["senha"]),
+                senha=hash_senha(dados["senha"]),
             )
             db.add(novo_usuario)
             db.flush()  # gera o id sem fechar a transação
@@ -177,14 +178,14 @@ def main():
             print(f"[OK] {dados['nome']} ({dados['email']}) — {len(consumos)} registros criados")
 
         db.commit()
-        print(f"\n✅ Seed concluído: {total_usuarios} usuário(s), {total_consumos} consumo(s) criado(s)")
+        print(f"\n[SEED OK] Seed concluído: {total_usuarios} usuário(s), {total_consumos} consumo(s) criado(s)")
         print("\nCredenciais para demo:")
         for u in USUARIOS_DEMO:
             print(f"  • {u['nome']:8s}  {u['email']:30s}  senha: {u['senha']}")
 
     except Exception as e:
         db.rollback()
-        print(f"\n❌ Erro ao executar seed: {e}")
+        print(f"\n[ERRO] Erro ao executar seed: {e}")
         raise
     finally:
         db.close()
