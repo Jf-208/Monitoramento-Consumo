@@ -97,7 +97,10 @@ export default function RegisterScreen({ navigation }) {
           resizeMode="contain"
         />
       </View>
-      <Text style={[styles.title, { textAlign: 'center', marginBottom: 24 }]}>Criar Conta</Text>
+      <Text style={[styles.title, { textAlign: 'center', marginBottom: 8 }]}>Criar Conta</Text>
+      <Text style={{ fontSize: 16, color: colors.textSub, textAlign: 'center', marginBottom: 24 }}>
+        Preencha os dados abaixo para se cadastrar
+      </Text>
 
       {/* Feedback in-app */}
       {mensagem && (
@@ -140,9 +143,10 @@ export default function RegisterScreen({ navigation }) {
         }
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.linkText}>
-          Ja tem uma conta? <Text style={styles.linkHighlight}>Faca login</Text>
+      <TouchableOpacity style={[styles.link, { marginTop: 20 }]} onPress={() => navigation.navigate('Login')}>
+        <Text style={[styles.linkText, { fontSize: 16 }]}>
+          Já tem uma conta?{'  '}
+          <Text style={[styles.linkHighlight, { fontSize: 16 }]}>Faça login</Text>
         </Text>
       </TouchableOpacity>
     </View>

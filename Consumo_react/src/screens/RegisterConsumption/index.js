@@ -343,6 +343,7 @@ export default function RegisterScreen() {
       fontWeight: 'bold',
       marginBottom: 10,
       letterSpacing: 0.5,
+      textAlign: 'center',
     },
 
     // Chips seletores

@@ -18,6 +18,7 @@ import {
   View, Text, ScrollView, TouchableOpacity,
   Modal, Dimensions, StyleSheet, ActivityIndicator, Platform,
 } from 'react-native';
+import { MotiView } from 'moti';
 import { Svg, Circle, G, Text as SvgText } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeContext } from '../../contexts/ThemeContext';
@@ -302,6 +303,11 @@ export default function RelatoriosScreen() {
         <View style={styles.inner}>
 
           {/* ─── CARD 1: GRAFICO DE BARRAS SEMANAL EMPILHADO ─── */}
+          <MotiView
+            from={{ opacity: 0, translateY: 10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 400, delay: 100 }}
+          >
           <View style={styles.card}>
             <Text style={styles.title}>Consumo semanal</Text>
 
@@ -356,10 +362,15 @@ export default function RelatoriosScreen() {
               </>
             )}
           </View>
-
+          </MotiView>
 
 
           {/* ─── CARD 2: GRAFICO DE PIZZA ─── */}
+          <MotiView
+            from={{ opacity: 0, translateY: 10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 400, delay: 250 }}
+          >
           <View style={styles.card}>
             <Text style={styles.title}>Distribuição do consumo (R$)</Text>
             <TouchableOpacity
@@ -388,8 +399,14 @@ export default function RelatoriosScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+          </MotiView>
 
           {/* ─── CARD 3: TOTAIS DA SEMANA ─── */}
+          <MotiView
+            from={{ opacity: 0, translateY: 10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 400, delay: 400 }}
+          >
           <View style={[styles.card, { borderColor: colors.teal + '44', borderWidth: 1 }]}>
             <Text style={styles.title}>Totais da semana</Text>
 
@@ -431,6 +448,7 @@ export default function RelatoriosScreen() {
               </View>
             </View>
           </View>
+          </MotiView>
 
         </View>
       </ScrollView>

@@ -3,7 +3,7 @@
 // Exibe a lista de 18 dicas com fontes reais, usando Ionicons para icones.
 // Aberta via Stack Navigator — tem SafeAreaView e ScreenScrollView.
 import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScaledSheet } from 'react-native-size-matters';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,11 +15,18 @@ export default function DicasScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
 
   const styles = ScaledSheet.create({
-    safeArea:   { flex: 1, backgroundColor: colors.bg },
-    inner:      { paddingHorizontal: '20@s', paddingTop: '20@vs', paddingBottom: '40@vs' },
-    header:     { flexDirection: 'row', alignItems: 'center', marginBottom: '24@vs' },
-    backBtn:    { width: '40@s', height: '40@s', borderRadius: '12@s', backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
-    headerTitle: { fontSize: '20@ms', fontWeight: 'bold', color: colors.text, marginLeft: '16@s' },
+    safeArea:    { flex: 1, backgroundColor: colors.bg },
+    inner:       { paddingHorizontal: '20@s', paddingTop: '20@vs', paddingBottom: '40@vs' },
+    // Cabeçalho — mesmo estilo da tela de Privacidade
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerTitle:  { fontSize: 18, fontWeight: '700', color: colors.text },
     dicaCard: {
       flexDirection: 'row', alignItems: 'center',
       padding: '16@ms', borderRadius: '18@s', borderWidth: 1,
@@ -37,16 +44,14 @@ export default function DicasScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScreenScrollView
-        contentContainerStyle={styles.inner}
-      >
-        {/* Header com botao voltar */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={18} color={colors.textSub} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Dicas</Text>
-        </View>
+      {/* Cabeçalho — mesmo estilo de Privacidade e Ajuda */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
+          <Ionicons name="arrow-back" size={22} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Dicas de Sustentabilidade</Text>
+      </View>
+      <ScreenScrollView contentContainerStyle={styles.inner}>
 
         {DICAS.map((d) => (
           <TouchableOpacity

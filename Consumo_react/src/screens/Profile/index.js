@@ -5,6 +5,7 @@
 // Foto de perfil salva no AsyncStorage por usuario.
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Switch, Image, Alert, Modal, ActivityIndicator } from 'react-native';
+import { MotiView } from 'moti';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -83,7 +84,12 @@ export default function PerfilScreen({ navigation }) {
       <ScreenScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4 }}
       >
-      {/* ─── SECAO 1: Avatar + nome + email ─── */}
+      {/* ─── SECÃO 1: Avatar + nome + email ─── */}
+      <MotiView
+        from={{ opacity: 0, translateY: 10 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 400, delay: 80 }}
+      >
       <TouchableOpacity onPress={handleAlterarFoto} style={{ position: 'relative', alignSelf: 'center', marginBottom: 16, marginTop: 12 }}>
         {photoUri
           ? <Image source={{ uri: photoUri }} style={{ width: 90, height: 90, borderRadius: 45 }} />
@@ -98,10 +104,16 @@ export default function PerfilScreen({ navigation }) {
         </View>
       </TouchableOpacity>
 
-      <Text style={[styles.name, { textAlign: 'center' }]}>{user?.nome || 'Usuario'}</Text>
+      <Text style={[styles.name, { textAlign: 'center' }]}>{user?.nome || 'Usuário'}</Text>
       <Text style={[styles.email, { textAlign: 'center', marginBottom: 16 }]}>{user?.email || 'email@exemplo.com'}</Text>
+      </MotiView>
 
       {/* ─── CARD UNICO: RESUMO COMPLETO ─── */}
+      <MotiView
+        from={{ opacity: 0, translateY: 10 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 400, delay: 200 }}
+      >
       <View style={{
         backgroundColor: colors.card,
         borderWidth: 1,
@@ -111,20 +123,21 @@ export default function PerfilScreen({ navigation }) {
         marginBottom: 12,
       }}>
 
-        {/* SECAO 1: VALOR TOTAL GASTO (colapsavel) */}
+        {/* SECAO 1: VALOR TOTAL GASTO (colapsável) */}
         <TouchableOpacity onPress={() => setGastoAberto(!gastoAberto)} activeOpacity={0.7}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text style={{ color: colors.textMuted, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Valor Total Gasto</Text>
             <Ionicons name={gastoAberto ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
           </View>
-          <Text style={{ color: colors.danger || '#E24B4A', fontWeight: 'bold', fontSize: 28, marginTop: 4, marginBottom: gastoAberto ? 10 : 0 }}>
-            R$ {(historicoTotal?.gastoTotalReais || 0).toFixed(2)}
-          </Text>
         </TouchableOpacity>
 
-        {/* Breakdown por categoria — visivel apenas se aberto */}
+        {/* Breakdown por categoria — visível apenas se aberto */}
         {gastoAberto && (
           <View>
+            {/* Total em destaque */}
+            <Text style={{ color: colors.danger || '#E24B4A', fontWeight: 'bold', fontSize: 28, marginTop: 8, marginBottom: 12, textAlign: 'center' }}>
+              R$ {(historicoTotal?.gastoTotalReais || 0).toFixed(2)}
+            </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
               <Ionicons name="water" size={16} color={colors.blue} style={{ marginRight: 8 }} />
               <Text style={{ color: colors.textSub, fontSize: 13, flex: 1 }}>Água: R$ {(historicoTotal?.gastoAguaReais || 0).toFixed(2)}</Text>
@@ -157,8 +170,14 @@ export default function PerfilScreen({ navigation }) {
         </View>
 
       </View>
+      </MotiView>
 
       {/* ─── SECAO 5: Menu de configuracoes ─── */}
+      <MotiView
+        from={{ opacity: 0, translateY: 10 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 400, delay: 350 }}
+      >
       <View style={styles.menuCard}>
         <View style={styles.menuItem}>
           <Text style={styles.menuText}>{isDark ? 'Modo Escuro' : 'Modo Claro'}</Text>
@@ -198,6 +217,7 @@ export default function PerfilScreen({ navigation }) {
           <Ionicons name="trash-outline" size={18} color={colors.danger || '#E24B4A'} />
         </TouchableOpacity>
       </View>
+      </MotiView>
 
       {/* ─── SECAO 6: Botao logout ─── */}
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
