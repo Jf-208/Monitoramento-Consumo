@@ -105,8 +105,8 @@ export default function LoginScreen({ navigation }) {
           resizeMode="contain"
         />
       </View>
-      <Text style={[styles.title, { textAlign: 'center', marginBottom: 8 }]}>Login</Text>
-      <Text style={[styles.subtitle, { fontSize: 16 }]}>Preencha seus dados para entrar</Text>
+      <Text style={[styles.title, { textAlign: 'center', marginBottom: 10 }]}>Login</Text>
+      <Text style={[styles.subtitle, { fontSize: 16, marginTop: 16, marginBottom: 16 }]}>Preencha seus dados para entrar</Text>
 
       {/* Feedback in-app */}
       {mensagem && (
