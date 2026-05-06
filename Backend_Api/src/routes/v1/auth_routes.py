@@ -97,29 +97,42 @@ class VerificarCodigoRequest(BaseModel):
 # ETAPA 1: Gera código de 6 dígitos e envia por e-mail
 @auth_router.post('/esqueci-senha')
 def esqueci_senha(dados: EsqueciSenhaRequest, db: Session = Depends(get_db)):
+    """
+    Inicia o fluxo de recuperação de senha.
+    Gera um código de 6 dígitos, salva com expiração de 15 min e envia por e-mail.
+    Sempre retorna mensagem genérica (não revela se o e-mail existe ou não).
+    """
+    # Mensagem genérica — nunca revelar se o e-mail está cadastrado
+    MENSAGEM_GENERICA = {"message": "Se o e-mail estiver cadastrado, você receberá o código em instantes."}
+
     usuario = db.query(Usuario).filter(Usuario.email == dados.email).first()
     if not usuario:
-        raise HTTPException(status_code=404, detail="E-mail não encontrado")
+        # Retorna sucesso mesmo para e-mails inexistentes (evita enumeração)
+        return MENSAGEM_GENERICA
 
     # Gera código aleatório de 6 dígitos
     codigo = str(random.randint(100000, 999999))
-    
-    # Salva o código e a data de expiração (10 minutos)
+
+    # Salva o código e a data de expiração (15 minutos)
     usuario.codigo_reset = codigo
-    usuario.codigo_reset_expira = datetime.now(timezone.utc) + timedelta(minutes=10)
+    usuario.codigo_reset_expira = datetime.now(timezone.utc) + timedelta(minutes=15)
     db.commit()
 
-    # Envia o código por e-mail
+    # Envia o código por e-mail — loga se falhar, mas não retorna erro ao usuário
     enviado = enviar_codigo_reset(dados.email, codigo)
     if not enviado:
-        # Mesmo se o e-mail falhar, retorna o código no console para testes
-        print(f"Código para {dados.email}: {codigo}")
-    
-    return {"message": "Código enviado para o seu e-mail!"}
+        print(f"[WARN] Falha ao enviar e-mail para {dados.email} — código: {codigo}")
+
+    return MENSAGEM_GENERICA
 
 # ETAPA 2: Verifica o código e redefine a senha
 @auth_router.post('/verificar-codigo')
 def verificar_codigo(dados: VerificarCodigoRequest, db: Session = Depends(get_db)):
+    """
+    Conclui o fluxo de recuperação de senha.
+    Valida o código (6 dígitos, não expirado), atualiza o hash bcrypt da senha.
+    Invalida o código após uso bem-sucedido.
+    """
     usuario = db.query(Usuario).filter(Usuario.email == dados.email).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="E-mail não encontrado")
@@ -127,14 +140,14 @@ def verificar_codigo(dados: VerificarCodigoRequest, db: Session = Depends(get_db
     # Verifica se o código é válido
     if usuario.codigo_reset != dados.codigo:
         raise HTTPException(status_code=400, detail="Código inválido")
-    
+
     # Verifica se o código não expirou
     if usuario.codigo_reset_expira and usuario.codigo_reset_expira < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Código expirado. Solicite um novo.")
 
-    # Redefine a senha
+    # Redefine a senha com novo hash bcrypt
     usuario.senha = hash_senha(dados.nova_senha)
-    # Limpa o código usado
+    # Invalida o código após uso — impede reutilização
     usuario.codigo_reset = None
     usuario.codigo_reset_expira = None
     db.commit()

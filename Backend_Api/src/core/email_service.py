@@ -1,82 +1,114 @@
 # email_service.py
 # Serviço de envio de e-mail para recuperação de senha.
-# Usa o SMTP nativo do Python (smtplib) com Gmail.
+# Tenta porta 587 (STARTTLS) primeiro; em caso de falha, tenta porta 465 (SSL).
 # As credenciais vêm do arquivo .env
+# IMPORTANTE: EMAIL_SENHA_APP deve ser uma "Senha de App" do Google, NÃO a senha normal.
+# Como gerar: myaccount.google.com → Segurança → Verificação em 2 etapas → Senhas de app
 
-import os
 import smtplib
-from email.mime.text import MIMEText
+import ssl
+import logging
+import os
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from dotenv import load_dotenv
 
 # Garante que vai achar o .env dentro da pasta Backend_Api, não importa de onde o uvicorn for rodado
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-def enviar_codigo_reset(email_destino: str, codigo: str) -> bool:
+logger = logging.getLogger(__name__)
+
+
+def enviar_codigo_reset(destinatario: str, codigo: str) -> bool:
     """
-    Envia um e-mail com o código de recuperação de senha.
-    Retorna True se enviado com sucesso, False se falhou.
+    Envia o código de recuperação de senha por e-mail.
+    Mantém o nome original para compatibilidade com auth_routes.py.
+    Internamente chama enviar_email_reset com fallback duplo (587 STARTTLS → 465 SSL).
+
+    @param destinatario - endereço de e-mail do usuário
+    @param codigo       - código de 6 dígitos gerado para reset
+    @returns bool       - True se enviou, False se falhou (loga o erro)
     """
-    remetente = os.getenv("EMAIL_REMETENTE")
-    senha_app = os.getenv("EMAIL_SENHA_APP")
+    return enviar_email_reset(destinatario, codigo)
+
+
+def enviar_email_reset(destinatario: str, codigo: str) -> bool:
+    """
+    Envia o código de recuperação de senha por e-mail.
+    Tenta porta 587 (STARTTLS) primeiro; em caso de falha, tenta porta 465 (SSL).
+
+    Requer no .env:
+      EMAIL_REMETENTE=seu@gmail.com
+      EMAIL_SENHA_APP=xxxx xxxx xxxx xxxx   ← Senha de App do Google, NÃO a senha normal
+
+    Para gerar Senha de App: myaccount.google.com → Segurança → Senhas de app
+
+    @param destinatario - endereço de e-mail do usuário
+    @param codigo       - código de 6 dígitos gerado para reset
+    @returns bool       - True se enviou, False se falhou (loga o erro)
+    """
+    remetente = os.getenv("EMAIL_REMETENTE", "")
+    senha_app = os.getenv("EMAIL_SENHA_APP", "")
 
     if not remetente or not senha_app:
-        print("Credenciais de e-mail não configuradas no .env")
+        logger.error("EMAIL_REMETENTE ou EMAIL_SENHA_APP não configurados no .env")
         return False
 
-    # Montagem do e-mail em HTML (visual profissional)
+    # ── Monta a mensagem ──────────────────────────────────────────────────────
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"🔐 Wavunder - Código de Recuperação: {codigo}"
-    msg["From"] = f"Wavunder App <{remetente}>"
-    msg["To"] = email_destino
+    msg["Subject"] = "Wavunder — Código de recuperação de senha"
+    msg["From"]    = f"Wavunder <{remetente}>"
+    msg["To"]      = destinatario
 
-    texto = f"""
-    🔐 Wavunder - Recuperação de Senha
-    
-    Olá! Recebemos uma solicitação para redefinir sua senha.
-    Use o código abaixo:
-    
-    {codigo}
-    
-    ⏰ Este código expira em 10 minutos.
-    Se você não solicitou essa redefinição, ignore este e-mail.
-    """
+    texto_plano = (
+        f"Seu código de recuperação Wavunder é: {codigo}\n\n"
+        "Este código expira em 15 minutos.\n"
+        "Se você não solicitou a recuperação, ignore este e-mail."
+    )
 
     html = f"""
-    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #0B1A3B; border-radius: 16px; padding: 32px; color: #fff;">
-        <h1 style="color: #F5A623; font-size: 24px; margin-bottom: 8px;">🔐 Wavunder</h1>
-        <p style="color: #8899AA; font-size: 14px; margin-bottom: 24px;">Recuperação de Senha</p>
-        
-        <p style="color: #CCDDE8; font-size: 16px;">Olá! Recebemos uma solicitação para redefinir sua senha.</p>
-        <p style="color: #CCDDE8; font-size: 16px;">Use o código abaixo:</p>
-        
-        <div style="background: #152C58; border: 2px solid #F5A623; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;">
-            <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #F5A623;">{codigo}</span>
+    <html><body style="font-family:sans-serif;background:#0d1117;color:#e6edf3;padding:32px;">
+      <div style="max-width:480px;margin:auto;background:#161b22;border-radius:12px;padding:32px;">
+        <h2 style="color:#1D9E75;margin-top:0;">Wavunder 🌊</h2>
+        <p>Olá! Você solicitou a recuperação de senha.</p>
+        <p>Seu código de verificação é:</p>
+        <div style="font-size:36px;font-weight:bold;letter-spacing:10px;
+                    color:#1D9E75;text-align:center;padding:20px 0;">
+          {codigo}
         </div>
-        
-        <p style="color: #8899AA; font-size: 13px;">⏰Este código expira em <strong>10 minutos</strong>.</p>
-        <p style="color: #8899AA; font-size: 13px;">Se você não solicitou essa redefinição, ignore este e-mail.</p>
-        
-        <hr style="border: 1px solid #1E3A5F; margin: 24px 0;">
-        <p style="color: #556677; font-size: 11px; text-align: center;">Wavunder App — Monitoramento Sustentável</p>
-    </div>
+        <p style="color:#8b949e;font-size:13px;">
+          Este código expira em <strong>15 minutos</strong>.<br>
+          Se você não fez esta solicitação, ignore este e-mail.
+        </p>
+      </div>
+    </body></html>
     """
 
-    parte_texto = MIMEText(texto, "plain")
-    parte_html = MIMEText(html, "html")
+    msg.attach(MIMEText(texto_plano, "plain", "utf-8"))
+    msg.attach(MIMEText(html, "html", "utf-8"))
 
-    # A ordem importa: o HTML deve vir por último num MIMEMultipart alternative
-    msg.attach(parte_texto)
-    msg.attach(parte_html)
-
+    # ── Tentativa 1: porta 587 STARTTLS ──────────────────────────────────────
     try:
-        # Conecta ao servidor SMTP do Gmail
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as servidor:
-            servidor.login(remetente, senha_app)
-            servidor.sendmail(remetente, email_destino, msg.as_string())
-        print(f"E-mail enviado para {email_destino}")
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+            server.ehlo()
+            server.starttls(context=ssl.create_default_context())
+            server.ehlo()
+            server.login(remetente, senha_app)
+            server.sendmail(remetente, destinatario, msg.as_string())
+        logger.info(f"E-mail enviado via porta 587 para {destinatario}")
         return True
-    except Exception as e:
-        print(f"Erro ao enviar e-mail: {e}")
+    except Exception as e1:
+        logger.warning(f"Porta 587 falhou: {e1} — tentando porta 465...")
+
+    # ── Tentativa 2: porta 465 SSL ────────────────────────────────────────────
+    try:
+        ctx = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ctx, timeout=10) as server:
+            server.login(remetente, senha_app)
+            server.sendmail(remetente, destinatario, msg.as_string())
+        logger.info(f"E-mail enviado via porta 465 para {destinatario}")
+        return True
+    except Exception as e2:
+        logger.error(f"Porta 465 também falhou: {e2}")
         return False

@@ -1,194 +1,194 @@
-# seed_demo.py
-# Script de demonstração para a banca acadêmica.
-# Insere dados realistas de 14 dias de consumo para um usuário de demonstração,
-# permitindo que os gráficos e estatísticas do app sejam exibidos com dados reais.
-#
-# Como executar (dentro da pasta Backend_Api/):
-#   python seed_demo.py
-#
-# Pré-requisito: o banco de dados já deve existir (rode o app ou uvicorn ao menos uma vez).
+#!/usr/bin/env python3
+"""
+seed_demo.py — Popula o banco com dados realistas para demonstração na banca.
 
-import os
+Cria 3 usuários com histórico de consumo de 30 dias.
+Útil para mostrar gráficos, análises e o nível sustentável funcionando.
+
+Uso:
+    cd Backend_Api
+    python seed_demo.py
+
+    # Para limpar e recriar:
+    python seed_demo.py --reset
+
+USUÁRIOS CRIADOS:
+    email: vitor@wavunder.app     senha: demo123
+    email: ana@wavunder.app       senha: demo123
+    email: pedro@wavunder.app     senha: demo123
+"""
+
 import sys
+import os
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from passlib.context import CryptContext
 
-# Garante que o Python encontre os módulos do projeto (src/)
+# ── Caminho do backend ────────────────────────────────────────────────────────
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
-from sqlalchemy.orm import Session
-from src.database.connection import SessionLocal, criar_tabelas
+from src.database.connection import SessionLocal, engine
+from src.models.base import Base
 from src.models.models import Usuario, Consumo
-from src.core.security import hash_senha
+
+# ── Configuração ──────────────────────────────────────────────────────────────
+pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+USUARIOS_DEMO = [
+    {"nome": "Vitor",  "email": "vitor@wavunder.app",  "senha": "demo123", "perfil": "moderado"},
+    {"nome": "Ana",    "email": "ana@wavunder.app",    "senha": "demo123", "perfil": "sustentavel"},
+    {"nome": "Pedro",  "email": "pedro@wavunder.app",  "senha": "demo123", "perfil": "alto"},
+]
+
+# ── Perfis de consumo ─────────────────────────────────────────────────────────
+# Referência: ANEEL e ANA — consumo médio brasileiro
+#   Água:    166L/dia por pessoa (SNIS 2022)
+#   Energia: 1.5 kWh/dia por pessoa (ANEEL 2023)
+PERFIS = {
+    "sustentavel": {
+        "agua_litros_min": 40,   "agua_litros_max": 90,
+        "energia_kwh_min": 0.3,  "energia_kwh_max": 0.8,
+        "gasto_rs_min": 5.0,     "gasto_rs_max": 20.0,
+    },
+    "moderado": {
+        "agua_litros_min": 100,  "agua_litros_max": 180,
+        "energia_kwh_min": 0.8,  "energia_kwh_max": 2.0,
+        "gasto_rs_min": 15.0,    "gasto_rs_max": 50.0,
+    },
+    "alto": {
+        "agua_litros_min": 200,  "agua_litros_max": 350,
+        "energia_kwh_min": 2.5,  "energia_kwh_max": 5.0,
+        "gasto_rs_min": 40.0,    "gasto_rs_max": 120.0,
+    },
+}
+
+TIPOS_AGUA    = [("Banho", "L"), ("Pia", "L"), ("Louça", "L"), ("Jardim", "L")]
+TIPOS_ENERGIA = [("Chuveiro", "kWh"), ("Ar-condicionado", "kWh"), ("Geladeira", "kWh"), ("TV", "kWh"), ("Computador", "kWh")]
+TIPOS_OUTROS  = [("Conta de Água", "R$"), ("Conta de Luz", "R$"), ("GLP (Gás)", "R$")]
 
 
-# ─── CONFIGURAÇÕES DO USUÁRIO DEMO ───────────────────────────────────────────
-
-DEMO_NOME  = "Demo Banca"
-DEMO_EMAIL = "demo@wavunder.app"
-DEMO_SENHA = "Demo@2025"
-
-
-# ─── RANGES DE CONSUMO REALISTAS ─────────────────────────────────────────────
-
-# Água: consumo diário de banho (litros)
-AGUA_MIN, AGUA_MAX = 60, 120
-
-# Energia: consumo diário (kWh)
-ENERGIA_MIN, ENERGIA_MAX = 0.8, 2.5
-
-# Vampiro: consumo stand-by diário (kWh)
-VAMPIRO_MIN, VAMPIRO_MAX = 0.2, 0.5
-
-
-def criar_usuario_demo(db: Session) -> Usuario:
+def gerar_consumos(id_usuario: int, perfil: str, dias: int = 30) -> list:
     """
-    Busca ou cria o usuário de demonstração no banco de dados.
-    Se já existir, apenas retorna o usuário existente sem duplicar.
+    Gera registros de consumo realistas para os últimos `dias` dias.
+    Não gera para todos os dias (simula comportamento humano).
+
+    @param id_usuario - FK do usuário no banco
+    @param perfil     - 'sustentavel', 'moderado' ou 'alto'
+    @param dias       - quantos dias para trás gerar dados
+    @returns list     - lista de objetos Consumo prontos para inserção
     """
-    usuario = db.query(Usuario).filter(Usuario.email == DEMO_EMAIL).first()
+    cfg = PERFIS[perfil]
+    consumos = []
+    hoje = datetime.now()
 
-    if usuario:
-        print(f"✅ Usuário demo já existe (id={usuario.id}). Pulando criação.")
-        return usuario
+    for dia_offset in range(dias):
+        data = hoje - timedelta(days=dia_offset)
 
-    usuario = Usuario(
-        nome=DEMO_NOME,
-        email=DEMO_EMAIL,
-        senha=hash_senha(DEMO_SENHA),
-    )
-    db.add(usuario)
-    db.commit()
-    db.refresh(usuario)
-    print(f"✅ Usuário demo criado com sucesso (id={usuario.id})")
-    return usuario
-
-
-def limpar_consumos_demo(db: Session, id_usuario: int):
-    """
-    Remove registros de consumo antigos do usuário demo para evitar duplicatas
-    ao rodar o script mais de uma vez.
-    """
-    deletados = db.query(Consumo).filter(Consumo.id_usuario == id_usuario).delete()
-    db.commit()
-    if deletados > 0:
-        print(f"🗑️  {deletados} registros antigos removidos.")
-
-
-def inserir_consumos_demo(db: Session, id_usuario: int):
-    """
-    Insere 14 dias de consumo realista para o usuário demo.
-    Os dados cobrem as últimas 2 semanas para preencher bem os gráficos.
-    """
-    agora = datetime.now(timezone.utc)
-    registros = []
-
-    print(f"\n📊 Gerando dados de consumo para os últimos 14 dias...\n")
-
-    for dias_atras in range(14, 0, -1):
-        data_base = agora - timedelta(days=dias_atras)
-        dia_str   = data_base.strftime('%d/%m')
-
-        # ── ÁGUA: 1 registro por dia (simulação de banho) ──────────────────
-        litros = round(random.uniform(AGUA_MIN, AGUA_MAX), 2)
-        registros.append(Consumo(
-            id_usuario    = id_usuario,
-            tipo_consumo  = "agua",
-            valor         = litros,
-            unidade_medida= "L",
-            is_simulado   = True,
-            data_registro = data_base.replace(hour=7, minute=30),  # horário de banho matinal
-        ))
-        print(f"  [{dia_str}] 💧 Água:    {litros} L")
-
-        # ── ENERGIA: 1 registro por dia (uso do chuveiro/aparelhos) ────────
-        kwh_energia = round(random.uniform(ENERGIA_MIN, ENERGIA_MAX), 4)
-        registros.append(Consumo(
-            id_usuario    = id_usuario,
-            tipo_consumo  = "energia",
-            valor         = kwh_energia,
-            unidade_medida= "kWh",
-            is_simulado   = True,
-            data_registro = data_base.replace(hour=8, minute=0),
-        ))
-        print(f"  [{dia_str}] ⚡ Energia: {kwh_energia} kWh")
-
-        # ── VAMPIRO: apenas nos últimos 7 dias (stand-by) ──────────────────
-        if dias_atras <= 7:
-            kwh_vampiro = round(random.uniform(VAMPIRO_MIN, VAMPIRO_MAX), 4)
-            registros.append(Consumo(
-                id_usuario    = id_usuario,
-                tipo_consumo  = "vampiro",
-                valor         = kwh_vampiro,
-                unidade_medida= "kWh",
-                is_simulado   = True,
-                data_registro = data_base.replace(hour=23, minute=0),  # stand-by noturno
+        # 80% de chance de registrar água no dia
+        if random.random() < 0.80:
+            tipo_nome, unidade = random.choice(TIPOS_AGUA)
+            litros = round(random.uniform(cfg["agua_litros_min"], cfg["agua_litros_max"]), 1)
+            consumos.append(Consumo(
+                id_usuario=id_usuario,
+                tipo_consumo="agua",
+                valor=litros,
+                unidade_medida=unidade,
+                nome_custom=tipo_nome,
+                data_personalizada=data,
+                data_registro=data,
+                is_simulado=False,
             ))
-            print(f"  [{dia_str}] 🧛 Vampiro: {kwh_vampiro} kWh")
 
-        print()
+        # 70% de chance de registrar energia no dia
+        if random.random() < 0.70:
+            tipo_nome, unidade = random.choice(TIPOS_ENERGIA)
+            kwh = round(random.uniform(cfg["energia_kwh_min"], cfg["energia_kwh_max"]), 3)
+            consumos.append(Consumo(
+                id_usuario=id_usuario,
+                tipo_consumo="energia",
+                valor=kwh,
+                unidade_medida=unidade,
+                nome_custom=tipo_nome,
+                data_personalizada=data,
+                data_registro=data,
+                is_simulado=False,
+            ))
 
-    # Insere todos de uma vez (mais eficiente)
-    db.add_all(registros)
-    db.commit()
-    print(f"✅ {len(registros)} registros inseridos com sucesso!")
+        # 20% de chance de registrar outros (conta, gás) no dia
+        if random.random() < 0.20:
+            tipo_nome, unidade = random.choice(TIPOS_OUTROS)
+            valor_rs = round(random.uniform(cfg["gasto_rs_min"], cfg["gasto_rs_max"]), 2)
+            consumos.append(Consumo(
+                id_usuario=id_usuario,
+                tipo_consumo="outros",
+                valor=0,
+                unidade_medida=unidade,
+                nome_custom=tipo_nome,
+                valor_monetario=valor_rs,
+                data_personalizada=data,
+                data_registro=data,
+                is_simulado=False,
+            ))
+
+    return consumos
 
 
-def exibir_resumo(db: Session, id_usuario: int):
-    """Exibe um resumo dos dados inseridos para confirmação visual."""
-    todos = db.query(Consumo).filter(Consumo.id_usuario == id_usuario).all()
+def main():
+    reset = "--reset" in sys.argv
 
-    total_agua    = sum(float(r.valor) for r in todos if r.tipo_consumo == "agua")
-    total_energia = sum(float(r.valor) for r in todos if r.tipo_consumo == "energia")
-    total_vampiro = sum(float(r.valor) for r in todos if r.tipo_consumo == "vampiro")
+    # Garante que as tabelas existem (fallback se migrations não foram rodadas)
+    Base.metadata.create_all(bind=engine)
 
-    print("\n" + "═" * 45)
-    print("  RESUMO DOS DADOS DE DEMONSTRAÇÃO")
-    print("═" * 45)
-    print(f"  👤 Usuário: {DEMO_NOME}")
-    print(f"  📧 E-mail:  {DEMO_EMAIL}")
-    print(f"  🔑 Senha:   {DEMO_SENHA}")
-    print("─" * 45)
-    print(f"  💧 Água total (14 dias):    {total_agua:.2f} L")
-    print(f"  ⚡ Energia total (14 dias): {total_energia:.4f} kWh")
-    print(f"  🧛 Vampiro total (7 dias):  {total_vampiro:.4f} kWh")
-    print(f"  📝 Total de registros:      {len(todos)}")
-    print("═" * 45)
-    print("\n  ✅ Pronto! Use as credenciais acima para")
-    print("     fazer login no app durante a banca.\n")
-
-
-# ─── EXECUÇÃO PRINCIPAL ───────────────────────────────────────────────────────
-
-if __name__ == "__main__":
-    print("\n🌊 WAVUNDER — Script de Seed para Demonstração")
-    print("=" * 45)
-
-    # Garante que as tabelas existam antes de inserir
-    criar_tabelas()
-    print("✅ Tabelas verificadas/criadas.")
-
-    db: Session = SessionLocal()
+    db = SessionLocal()
     try:
-        # 1. Cria (ou recupera) o usuário demo
-        usuario = criar_usuario_demo(db)
+        total_usuarios = 0
+        total_consumos = 0
 
-        # 2. Limpa registros anteriores para evitar duplicatas
-        limpar_consumos_demo(db, usuario.id)
+        for dados in USUARIOS_DEMO:
+            usuario_existente = db.query(Usuario).filter_by(email=dados["email"]).first()
 
-        # 3. Insere 14 dias de dados realistas
-        inserir_consumos_demo(db, usuario.id)
+            if usuario_existente:
+                if reset:
+                    print(f"[RESET] Removendo usuário existente: {dados['email']}")
+                    db.query(Consumo).filter_by(id_usuario=usuario_existente.id).delete()
+                    db.delete(usuario_existente)
+                    db.commit()
+                else:
+                    print(f"[SKIP] Usuário já existe: {dados['email']} (use --reset para recriar)")
+                    continue
 
-        # 4. Exibe resumo final
-        exibir_resumo(db, usuario.id)
+            # Cria o usuário com senha hasheada
+            novo_usuario = Usuario(
+                nome=dados["nome"],
+                email=dados["email"],
+                senha=pwd_ctx.hash(dados["senha"]),
+            )
+            db.add(novo_usuario)
+            db.flush()  # gera o id sem fechar a transação
+
+            consumos = gerar_consumos(novo_usuario.id, dados["perfil"], dias=30)
+            db.bulk_save_objects(consumos)
+
+            total_usuarios += 1
+            total_consumos += len(consumos)
+            print(f"[OK] {dados['nome']} ({dados['email']}) — {len(consumos)} registros criados")
+
+        db.commit()
+        print(f"\n✅ Seed concluído: {total_usuarios} usuário(s), {total_consumos} consumo(s) criado(s)")
+        print("\nCredenciais para demo:")
+        for u in USUARIOS_DEMO:
+            print(f"  • {u['nome']:8s}  {u['email']:30s}  senha: {u['senha']}")
 
     except Exception as e:
         db.rollback()
-        print(f"\n❌ Erro durante o seed: {e}")
+        print(f"\n❌ Erro ao executar seed: {e}")
         raise
-
     finally:
         db.close()
+
+
+if __name__ == "__main__":
+    main()

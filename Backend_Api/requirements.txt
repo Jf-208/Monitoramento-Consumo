@@ -1,10 +1,24 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-psycopg2-binary
-pydantic
-python-dotenv
-passlib[bcrypt]
-bcrypt
-alembic
-python-multipart
+# ── Web Framework ─────────────────────────────────────────────────────────────
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+
+# ── Banco de Dados ────────────────────────────────────────────────────────────
+sqlalchemy==2.0.36
+alembic==1.14.0
+psycopg2-binary==2.9.10
+
+# ── Autenticação e Segurança ──────────────────────────────────────────────────
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.19
+
+# ── Validação ─────────────────────────────────────────────────────────────────
+pydantic==2.10.3
+pydantic-settings==2.7.0
+
+# ── Configuração ──────────────────────────────────────────────────────────────
+python-dotenv==1.0.1
+
+# ── Utilitários ───────────────────────────────────────────────────────────────
+httpx==0.28.1
+email-validator==2.2.0
