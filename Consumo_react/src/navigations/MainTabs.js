@@ -9,14 +9,13 @@
 //
 // O FAB foi removido — agora existe uma aba dedicada "Registrar" no BottomNav.
 
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Platform, StatusBar, Dimensions } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import HomeScreen from '../screens/Home';
 import RegisterScreen from '../screens/RegisterConsumption';
-import MetasScreen from '../screens/Metas';
 import RelatoriosScreen from '../screens/Reports';
 import PerfilScreen from '../screens/Profile';
 import BottomNav from '../components/layout/BottomNav';
@@ -24,11 +23,10 @@ import { ThemeContext } from '../contexts/ThemeContext';
 
 // Labels fixos das abas — NUNCA mudam
 const TAB_LABELS = {
-  home:      'Início',
+  home: 'Início',
   registrar: 'Registrar',
-  metas:     'Metas',
   relatorios: 'Relatórios',
-  perfil:    'Perfil',
+  perfil: 'Perfil',
 };
 
 // Altura do header: usada tanto no spacer quanto no posicionamento
@@ -37,20 +35,9 @@ const BOTTOM_NAV_HEIGHT = 60;
 
 
 
-export default function MainTabs({ navigation, route }) {
-  // Permite que telas internas naveguem para uma aba específica:
-  //   navigation.navigate('MainTabs', { tab: 'metas' })
-  const tabInicial = route?.params?.tab || 'home';
-  const [activeTab, setActiveTab] = useState(tabInicial);
+export default function MainTabs({ navigation }) {
+  const [activeTab, setActiveTab] = useState('home');
   const { colors } = useContext(ThemeContext);
-
-  // Reage a navegações externas que passam { tab: 'metas' } como parâmetro.
-  // useState não reage a mudanças de route.params — useEffect resolve.
-  useEffect(() => {
-    if (route?.params?.tab && route.params.tab !== activeTab) {
-      setActiveTab(route.params.tab);
-    }
-  }, [route?.params?.tab]);
 
   const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0;
 
@@ -58,7 +45,6 @@ export default function MainTabs({ navigation, route }) {
     switch (activeTab) {
       case 'home':       return <HomeScreen navigation={navigation} />;
       case 'registrar':  return <RegisterScreen navigation={navigation} />;
-      case 'metas':      return <MetasScreen navigation={navigation} />;
       case 'relatorios': return <RelatoriosScreen navigation={navigation} />;
       case 'perfil':     return <PerfilScreen navigation={navigation} />;
       default:           return <HomeScreen navigation={navigation} />;

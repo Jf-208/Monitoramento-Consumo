@@ -31,20 +31,11 @@ class Consumo(Base):
 class Meta(Base):
     __tablename__ = "meta"
 
-    id             = Column(Integer, primary_key=True, autoincrement=True)
-    id_usuario     = Column(Integer, ForeignKey("usuario.id", ondelete="CASCADE"), nullable=False)
-    # 'agua' | 'energia' | 'outros' — mesmo vocabulário do modelo Consumo.tipo_consumo
-    tipo           = Column(String(20), nullable=False)
-    # 'semanal' | 'mensal'
-    periodo        = Column(String(20), nullable=False)
-    valor_meta     = Column(Numeric(10, 2), nullable=False)
-    # 'L' | 'kWh' | 'R$' — determinado pelo tipo ao criar
-    unidade_medida = Column(String(10), nullable=False)
-    # String ISO 'YYYY-MM-DD' — calculado no backend, nunca aceito do frontend
-    data_inicio    = Column(String(10), nullable=False)
-    data_fim       = Column(String(10), nullable=False)
-    ativa          = Column(Boolean, default=True, nullable=False)
-    created_at     = Column(DateTime(timezone=True), server_default=func.now())
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_usuario = Column(Integer, ForeignKey("usuario.id", ondelete="CASCADE"), nullable=False)
+    tipo_consumo = Column(String(80), nullable=False)
+    valor_meta = Column(Numeric(10, 2), nullable=False)
+    periodo = Column(String(20), nullable=False)
 
 
 class Dica(Base):

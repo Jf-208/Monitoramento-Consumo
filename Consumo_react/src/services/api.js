@@ -122,50 +122,5 @@ const api = {
     }
     return { data: await response.json() };
   },
-  // ─── METAS ────────────────────────────────────────────────────────────────
-
-  // Retorna metas ativas do usuário logado
-  buscarMetasAtivas: async (id_usuario) => {
-    try {
-      const res = await api.get(`/metas/ativas?id_usuario=${id_usuario}`);
-      return { sucesso: true, dados: res.data, erro: null };
-    } catch (e) {
-      return { sucesso: false, dados: [], erro: e?.response?.data?.detail || 'Erro ao buscar metas.' };
-    }
-  },
-
-  // Cria nova meta — data_inicio em formato local YYYY-MM-DD (sem conversão UTC)
-  criarMeta: async (id_usuario, { tipo, periodo, valor_meta, data_inicio }) => {
-    try {
-      const res = await api.post(`/metas?id_usuario=${id_usuario}`, { tipo, periodo, valor_meta, data_inicio });
-      return { sucesso: true, dados: res.data, erro: null };
-    } catch (e) {
-      return { sucesso: false, dados: null, erro: e?.response?.data?.detail || 'Erro ao criar meta.' };
-    }
-  },
-
-  // Atualiza valor_meta e/ou ativa
-  atualizarMeta: async (id_usuario, id, payload) => {
-    try {
-      const res = await api.put(`/metas/${id}?id_usuario=${id_usuario}`, payload);
-      return { sucesso: true, dados: res.data, erro: null };
-    } catch (e) {
-      return { sucesso: false, dados: null, erro: e?.response?.data?.detail || 'Erro ao atualizar meta.' };
-    }
-  },
-
-  // Hard delete da meta
-  deletarMeta: async (id_usuario, id) => {
-    try {
-      const headers = await getAuthHeaders();
-      await fetchWithTimeout(`${BASE_URL}/metas/${id}?id_usuario=${id_usuario}`, {
-        method: 'DELETE',
-        headers,
-      });
-      return { sucesso: true, dados: null, erro: null };
-    } catch (e) {
-      return { sucesso: false, dados: null, erro: e?.response?.data?.detail || 'Erro ao deletar meta.' };
-    }
-  },
 };
 export default api;
