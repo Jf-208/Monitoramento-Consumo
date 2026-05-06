@@ -1,3 +1,5 @@
+import logging
+import os as _os
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -5,6 +7,9 @@ from src.database.connection import get_db
 from src.models.models import Usuario
 from src.schemas.user_schema import UsuarioCriar, UsuarioResponse
 from src.core.security import hash_senha, verificar_senha
+
+# Logger do módulo — visível nos logs do Railway (aba Logs do serviço)
+_logger = logging.getLogger(__name__)
 
 # Aqui criamos o roteador de autenticação. É o carteiro que entrega as chamadas de /auth
 auth_router = APIRouter(prefix='/auth', tags=['auth'])
@@ -118,10 +123,17 @@ def esqueci_senha(dados: EsqueciSenhaRequest, db: Session = Depends(get_db)):
     usuario.codigo_reset_expira = datetime.now(timezone.utc) + timedelta(minutes=15)
     db.commit()
 
-    # Envia o código por e-mail — loga se falhar, mas não retorna erro ao usuário
+    # Envia o código por e-mail
     enviado = enviar_codigo_reset(dados.email, codigo)
-    if not enviado:
-        print(f"[WARN] Falha ao enviar e-mail para {dados.email} — código: {codigo}")
+
+    # Loga o resultado — visível nos logs do Railway (aba Logs do serviço)
+    if enviado:
+        _logger.info(f"[EMAIL OK] Codigo enviado para {dados.email}")
+    else:
+        _logger.error(
+            f"[EMAIL FALHOU] Nao foi possivel enviar para {dados.email}. "
+            f"Verifique EMAIL_REMETENTE e EMAIL_SENHA_APP nas variaveis do Railway."
+        )
 
     return MENSAGEM_GENERICA
 
@@ -154,3 +166,50 @@ def verificar_codigo(dados: VerificarCodigoRequest, db: Session = Depends(get_db
 
     return {"message": "Senha redefinida com sucesso!"}
 
+
+# ────────────────────────────────────────────────────────────────────────────
+# DIAGNOSTICO: Testa envio de e-mail sem passar pelo fluxo de forgot-password.
+# Usar para verificar se as variaveis EMAIL_REMETENTE / EMAIL_SENHA_APP
+# estao corretamente configuradas no Railway Dashboard → Variables.
+# ────────────────────────────────────────────────────────────────────────────
+class TestarEmailRequest(BaseModel):
+    destinatario: str
+
+@auth_router.post('/testar-email')
+def testar_email(dados: TestarEmailRequest):
+    """
+    Envia um e-mail de teste (codigo fixo 123456) para diagnosticar a configuracao SMTP.
+    Retorna se as variaveis de ambiente estao configuradas e se o envio foi bem-sucedido.
+
+    Como usar apos deploy no Railway:
+        curl -X POST https://<sua-url>.up.railway.app/auth/testar-email \\
+             -H 'Content-Type: application/json' \\
+             -d '{"destinatario": "seu@email.com"}'
+
+    Resposta quando funciona:
+        {"enviado": true, "remetente_configurado": "seu@gmail.com", "senha_app_configurada": true}
+
+    Resposta quando variaveis nao estao no Railway:
+        {"enviado": false, "remetente_configurado": "NAO CONFIGURADO", "senha_app_configurada": false}
+    """
+    remetente = _os.getenv("EMAIL_REMETENTE", "NAO CONFIGURADO")
+    senha_ok  = bool(_os.getenv("EMAIL_SENHA_APP", ""))
+
+    # Log das variaveis carregadas (sem expor a senha)
+    _logger.info(
+        f"[DIAG] EMAIL_REMETENTE={remetente} | "
+        f"EMAIL_SENHA_APP configurado={senha_ok}"
+    )
+
+    enviado = enviar_codigo_reset(dados.destinatario, "123456")
+
+    return {
+        "enviado": enviado,
+        "remetente_configurado": remetente,
+        "senha_app_configurada": senha_ok,
+        "destinatario": dados.destinatario,
+        "instrucao": (
+            "Se enviado=false e senha_app_configurada=false, "
+            "configure EMAIL_REMETENTE e EMAIL_SENHA_APP no Railway Dashboard -> Variables."
+        )
+    }

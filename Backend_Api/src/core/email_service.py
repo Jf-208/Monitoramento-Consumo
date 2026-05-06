@@ -51,8 +51,17 @@ def enviar_email_reset(destinatario: str, codigo: str) -> bool:
     remetente = os.getenv("EMAIL_REMETENTE", "")
     senha_app = os.getenv("EMAIL_SENHA_APP", "")
 
+    # Diagnóstico — visível nos logs do Railway sem expor a senha
+    logger.info(
+        f"[EMAIL_SERVICE] Tentando enviar para {destinatario} "
+        f"| remetente='{remetente}' | senha_configurada={bool(senha_app)}"
+    )
+
     if not remetente or not senha_app:
-        logger.error("EMAIL_REMETENTE ou EMAIL_SENHA_APP não configurados no .env")
+        logger.error(
+            "EMAIL_REMETENTE ou EMAIL_SENHA_APP nao configurados. "
+            "No Railway: Dashboard -> seu servico -> Variables -> adicionar as duas variaveis."
+        )
         return False
 
     # ── Monta a mensagem ──────────────────────────────────────────────────────
