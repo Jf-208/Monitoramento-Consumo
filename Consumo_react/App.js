@@ -2,6 +2,7 @@ import React from 'react';
 import { ThemeProvider } from './src/contexts/ThemeContext';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { ConsumptionProvider } from './src/contexts/ConsumptionContext';
+import { MetasProvider } from './src/contexts/MetasContext';
 import AppNavigator from './src/navigations/AppNavigator';
 import { StatusBar, Platform } from 'react-native';
 
@@ -38,8 +39,10 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <ConsumptionProvider>
-          <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-          <AppNavigator />
+          <MetasProvider>  {/* MetasProvider dentro de ConsumptionProvider para acessar registros */}
+            <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+            <AppNavigator />
+          </MetasProvider>
         </ConsumptionProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import HomeScreen from '../screens/Home';
 import RegisterScreen from '../screens/RegisterConsumption';
+import MetasScreen from '../screens/Metas';
 import RelatoriosScreen from '../screens/Reports';
 import PerfilScreen from '../screens/Profile';
 import BottomNav from '../components/layout/BottomNav';
@@ -23,10 +24,11 @@ import { ThemeContext } from '../contexts/ThemeContext';
 
 // Labels fixos das abas — NUNCA mudam
 const TAB_LABELS = {
-  home: 'Início',
+  home:      'Início',
   registrar: 'Registrar',
+  metas:     'Metas',
   relatorios: 'Relatórios',
-  perfil: 'Perfil',
+  perfil:    'Perfil',
 };
 
 // Altura do header: usada tanto no spacer quanto no posicionamento
@@ -45,6 +47,7 @@ export default function MainTabs({ navigation }) {
     switch (activeTab) {
       case 'home':       return <HomeScreen navigation={navigation} />;
       case 'registrar':  return <RegisterScreen navigation={navigation} />;
+      case 'metas':      return <MetasScreen navigation={navigation} />;
       case 'relatorios': return <RelatoriosScreen navigation={navigation} />;
       case 'perfil':     return <PerfilScreen navigation={navigation} />;
       default:           return <HomeScreen navigation={navigation} />;

@@ -23,6 +23,7 @@ export default function BottomNav({ active, onNav, labels = DEFAULT_LABELS }) {
   const items = [
     { id: 'home',       icon: 'home',          label: 'Início'     },
     { id: 'registrar',  icon: 'add-circle',    label: 'Registrar'  },
+    { id: 'metas',      icon: 'flag',          label: 'Metas'      },
     { id: 'relatorios', icon: 'bar-chart',     label: 'Relatórios' },
     { id: 'perfil',     icon: 'person-circle', label: 'Perfil'     },
   ];
@@ -41,7 +42,8 @@ export default function BottomNav({ active, onNav, labels = DEFAULT_LABELS }) {
     btn: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: '24@s',
+      // Reduzido para acomodar 5 abas sem cortar labels
+      paddingHorizontal: '14@s',
       paddingVertical: '8@ms',
     },
     label: {

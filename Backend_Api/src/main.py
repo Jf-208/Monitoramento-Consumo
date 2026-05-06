@@ -31,8 +31,11 @@ app.add_middleware(
 def health_check():
     return {"status": "API em Português no ar!"}
 
-# Incluindo as rotas de autenticação e consumo
+from src.routes.v1.meta_routes import meta_router
+
+# Incluindo as rotas de autenticação, consumo e metas
 app.include_router(auth_router)
 app.include_router(consumo_router)
+app.include_router(meta_router)
 
 # Comando para rodar: uvicorn src.main:app --reload

@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../../contexts/AuthContext';
 import { ThemeContext } from '../../contexts/ThemeContext';
 import { ConsumptionContext } from '../../contexts/ConsumptionContext';
+import { MetasContext } from '../../contexts/MetasContext';
 import { getHomeStyles } from '../../styles/screensStyles';
 import StatBar from '../../components/intermediate/StatBar';
 import { DICAS } from '../../constants/data';
@@ -23,12 +24,17 @@ export default function HomeScreen({ navigation }) {
   const { user }    = useContext(AuthContext);
   const { colors }  = useContext(ThemeContext);
   const {
-    consumoSemanalReal,   // usado para calcularNivel (metrica de ritmo semanal)
-    consumoMensalReal,    // usado para StatBars e Gasto Mensal
+    consumoSemanalReal,
+    consumoMensalReal,
     isLoadingBackend,
+    registros,
   } = useContext(ConsumptionContext);
+  const { metas, calcularProgresso, buscarMetas } = useContext(MetasContext);
 
   const styles = getHomeStyles(colors);
+
+  // Carrega metas ao montar a home
+  useEffect(() => { buscarMetas(); }, []);
 
   // Nivel sustentavel calculado com percentuais SEMANAIS (metrica de ritmo, nao de acumulo)
   const nivel = calcularNivel(
@@ -95,7 +101,7 @@ export default function HomeScreen({ navigation }) {
           resizeMode="contain"
         />
       </View>
-      <Text style={[styles.greeting, { textAlign: 'center', marginTop: 10 }]}>Ola, {user?.nome || 'Usuario'}</Text>
+      <Text style={[styles.greeting, { textAlign: 'center', marginTop: 10 }]}>Bem vindo, {user?.nome || 'Usuario'}</Text>
       <Text style={[styles.title, { textAlign: 'center' }]}>Seu painel</Text>
 
       {/* Card de Nivel Sustentavel — animado, com emoji */}
@@ -105,7 +111,7 @@ export default function HomeScreen({ navigation }) {
         transition={{ type: 'timing', duration: 500, delay: 100 }}
       >
         <View style={[styles.heroCard, { borderLeftWidth: 4, borderLeftColor: nivel.cor, alignItems: 'center' }]}>
-          <Text style={[styles.heroSubtitle, { textAlign: 'center' }]}>Nivel sustentavel</Text>
+          <Text style={[styles.heroSubtitle, { textAlign: 'center' }]}>Nivel sustentável</Text>
           <Text style={[styles.heroTitle, { color: nivel.cor, textAlign: 'center' }]}>
             {nivel.emoji} {nivel.label}
           </Text>
@@ -114,7 +120,7 @@ export default function HomeScreen({ navigation }) {
       </MotiView>
 
       {/* Consumo MENSAL (dados de 30 dias do backend) */}
-      <Text style={styles.sectionTitle}>Consumo Mensal</Text>
+      <Text style={[styles.sectionTitle, { textAlign: 'center' }]}>Consumo Mensal</Text>
       <MotiView
         from={{ opacity: 0, translateY: 8 }}
         animate={{ opacity: 1, translateY: 0 }}
@@ -185,10 +191,56 @@ export default function HomeScreen({ navigation }) {
         </View>
       </MotiView>
 
+      {/* ─── WIDGET DE METAS ─── */}
+      <Text style={[styles.sectionTitle, { textAlign: 'center' }]}>Minhas Metas</Text>
+      <MotiView
+        from={{ opacity: 0, translateY: 8 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 400, delay: 450 }}
+      >
+        {metas.length === 0 ? (
+          // CTA: sem metas definidas
+          <TouchableOpacity
+            style={[styles.statsCard, { alignItems: 'center', flexDirection: 'row', gap: 10, justifyContent: 'center' }]}
+            onPress={() => { /* MainTabs trata via onNav */ }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="flag-outline" size={18} color={colors.textMuted} />
+            <Text style={{ color: colors.textSub, fontSize: 14 }}>Defina uma meta de consumo</Text>
+            <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.statsCard}>
+            {metas.slice(0, 3).map(meta => {
+              const progresso = calcularProgresso(meta, registros);
+              const corStatus = progresso.status === 'otimo' ? '#1D9E75'
+                              : progresso.status === 'bom'   ? '#378ADD'
+                              : progresso.status === 'atencao' ? '#EF9F27'
+                              : '#E24B4A';
+              const icone = meta.tipo === 'agua' ? 'water' : meta.tipo === 'energia' ? 'flash' : 'receipt-outline';
+              return (
+                <View key={meta.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 8 }}>
+                  <Ionicons name={icone} size={14} color={corStatus} />
+                  <Text style={{ color: colors.textSub, fontSize: 12, width: 90 }}>
+                    {meta.tipo.charAt(0).toUpperCase() + meta.tipo.slice(1)} · {meta.periodo === 'semanal' ? 'Sem.' : 'Mês'}
+                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <StatBar label="" value={progresso.percentual} max={100} color={corStatus} unit="%" />
+                  </View>
+                  <Text style={{ color: corStatus, fontSize: 12, fontWeight: '700', width: 40, textAlign: 'right' }}>
+                    {progresso.percentual.toFixed(0)}%
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </MotiView>
+
       {/* Dica do Dia */}
       {dicaDoDia && (
         <>
-          <Text style={styles.sectionTitle}>Dica do dia</Text>
+          <Text style={[styles.sectionTitle, { textAlign: 'center' }]}>Dica do dia</Text>
         <MotiView
           from={{ opacity: 0, translateY: 8 }}
           animate={{ opacity: 1, translateY: 0 }}
@@ -235,7 +287,7 @@ export default function HomeScreen({ navigation }) {
         >
           <Ionicons name="bulb-outline" size={16} color={colors.teal || '#1D9E75'} />
           <Text style={{ color: colors.teal || '#1D9E75', fontSize: 14, fontWeight: '600' }}>
-            Para mais dicas, clique aqui
+            Clique aqui para mais dicas
           </Text>
           <Ionicons name="chevron-forward" size={14} color={colors.teal || '#1D9E75'} />
         </TouchableOpacity>

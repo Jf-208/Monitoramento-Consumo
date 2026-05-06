@@ -58,7 +58,8 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            compare_type=True,  # Detecta mudanças de tipo de coluna
+            compare_type=True,          # Detecta mudanças de tipo de coluna
+            render_as_batch=True,       # Necessário para SQLite: ALTER TABLE via batch
         )
         with context.begin_transaction():
             context.run_migrations()
