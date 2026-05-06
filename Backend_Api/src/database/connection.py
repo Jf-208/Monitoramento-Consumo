@@ -8,7 +8,7 @@ from src.models.base import Base
 load_dotenv()
 
 # Pega a URL do banco do .env
-# Em produção: Supabase PostgreSQL
+# Em produção: PostgreSQL via Railway
 # Se não existir no .env, cai para o SQLite local (fallback para desenvolvimento)
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./banco.sqlite")
 

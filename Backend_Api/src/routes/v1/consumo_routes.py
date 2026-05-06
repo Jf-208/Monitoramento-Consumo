@@ -245,7 +245,7 @@ def historico_consumo(id_usuario: int, db: Session = Depends(get_db)):
     registros = (
         db.query(Consumo)
         .filter(Consumo.id_usuario == id_usuario)
-        .order_by(Consumo.data_registro.asc())
+        .order_by(Consumo.data_registro.desc())
         .limit(100)
         .all()
     )

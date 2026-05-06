@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.database.connection import criar_tabelas
 from src.routes.v1.auth_routes import auth_router
 from src.routes.v1.consumo_routes import consumo_router
-from src.routes.v1.meta_routes import meta_router   # import no topo — falha ruidosamente se houver erro
 
 # Ciclo de vida da aplicação
 @asynccontextmanager
@@ -14,7 +13,8 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    title="API de Monitoramento - Consumo",
+    title="Wavunder API v1",
+    description="API de monitoramento sustentável de consumo de água e energia — Wavunder v3",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -32,9 +32,8 @@ app.add_middleware(
 def health_check():
     return {"status": "API em Português no ar!"}
 
-# Routers registrados após o app estar configurado
+# Incluindo as rotas de autenticação e consumo
 app.include_router(auth_router)
 app.include_router(consumo_router)
-app.include_router(meta_router)
 
 # Comando para rodar: uvicorn src.main:app --reload
