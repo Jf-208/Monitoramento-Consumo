@@ -10,6 +10,7 @@
 import logging
 from datetime import date, timedelta
 from calendar import monthrange
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -44,7 +45,7 @@ def _calcular_data_fim(data_inicio_str: str, periodo: str) -> str:
 
 
 # ─── HELPER: validar propriedade ─────────────────────────────────────────────
-def _verificar_propriedade(meta: Meta | None, id_usuario: int) -> Meta:
+def _verificar_propriedade(meta: Optional[Meta], id_usuario: int) -> Meta:
     """Levanta 404 se meta não existe, 403 se pertence a outro usuário."""
     if meta is None:
         raise HTTPException(status_code=404, detail="Meta não encontrada.")
@@ -55,7 +56,7 @@ def _verificar_propriedade(meta: Meta | None, id_usuario: int) -> Meta:
 
 
 # ─── GET /metas/ativas ────────────────────────────────────────────────────────
-@meta_router.get('/ativas', response_model=list[MetaResponse])
+@meta_router.get('/ativas', response_model=List[MetaResponse])
 def listar_metas_ativas(id_usuario: int, db: Session = Depends(get_db)):
     """
     Retorna todas as metas ativas do usuário logado, ordenadas por created_at DESC.

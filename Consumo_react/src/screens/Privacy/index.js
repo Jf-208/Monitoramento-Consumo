@@ -4,9 +4,9 @@
 // Segue diretrizes da LGPD (Lei 13.709/2018).
 import React, { useContext } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView,
-  SafeAreaView, Platform,
+  View, Text, TouchableOpacity, ScrollView, Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeContext } from '../../contexts/ThemeContext';
 
@@ -64,7 +64,7 @@ export default function PrivacidadeScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'bottom']}>
       {/* Cabeçalho */}
       <View style={{
         flexDirection: 'row',

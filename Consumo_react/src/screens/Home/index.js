@@ -199,10 +199,10 @@ export default function HomeScreen({ navigation }) {
         transition={{ type: 'timing', duration: 400, delay: 450 }}
       >
         {metas.length === 0 ? (
-          // CTA: sem metas definidas
+          // CTA: sem metas definidas — navega para a aba Metas via prop de navigation
           <TouchableOpacity
             style={[styles.statsCard, { alignItems: 'center', flexDirection: 'row', gap: 10, justifyContent: 'center' }]}
-            onPress={() => { /* MainTabs trata via onNav */ }}
+            onPress={() => navigation.navigate('MainTabs', { tab: 'metas' })}
             activeOpacity={0.8}
           >
             <Ionicons name="flag-outline" size={18} color={colors.textMuted} />

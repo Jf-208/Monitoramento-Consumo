@@ -3,9 +3,9 @@
 // Mesmo padrão visual da tela de Privacidade (SafeAreaView + ScrollView nativo).
 import React, { useContext } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView,
-  SafeAreaView, Platform,
+  View, Text, TouchableOpacity, ScrollView, Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeContext } from '../../contexts/ThemeContext';
 
@@ -43,7 +43,7 @@ export default function AjudaScreen({ navigation }) {
   const teal = colors.teal || '#1D9E75';
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'bottom']}>
       {/* Cabeçalho com seta igual ao Privacy */}
       <View style={{
         flexDirection: 'row',

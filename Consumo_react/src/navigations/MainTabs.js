@@ -37,8 +37,11 @@ const BOTTOM_NAV_HEIGHT = 60;
 
 
 
-export default function MainTabs({ navigation }) {
-  const [activeTab, setActiveTab] = useState('home');
+export default function MainTabs({ navigation, route }) {
+  // Permite que telas internas naveguem para uma aba específica:
+  //   navigation.navigate('MainTabs', { tab: 'metas' })
+  const tabInicial = route?.params?.tab || 'home';
+  const [activeTab, setActiveTab] = useState(tabInicial);
   const { colors } = useContext(ThemeContext);
 
   const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0;
