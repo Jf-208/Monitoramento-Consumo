@@ -9,7 +9,7 @@
 //
 // O FAB foi removido — agora existe uma aba dedicada "Registrar" no BottomNav.
 
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { View, Platform, StatusBar, Dimensions } from 'react-native';
 import { ScaledSheet } from 'react-native-size-matters';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -43,6 +43,14 @@ export default function MainTabs({ navigation, route }) {
   const tabInicial = route?.params?.tab || 'home';
   const [activeTab, setActiveTab] = useState(tabInicial);
   const { colors } = useContext(ThemeContext);
+
+  // Reage a navegações externas que passam { tab: 'metas' } como parâmetro.
+  // useState não reage a mudanças de route.params — useEffect resolve.
+  useEffect(() => {
+    if (route?.params?.tab && route.params.tab !== activeTab) {
+      setActiveTab(route.params.tab);
+    }
+  }, [route?.params?.tab]);
 
   const statusBarHeight = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0;
 

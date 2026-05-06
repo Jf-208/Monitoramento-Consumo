@@ -43,13 +43,12 @@ export default function AjudaScreen({ navigation }) {
   const teal = colors.teal || '#1D9E75';
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
       {/* Cabeçalho com seta igual ao Privacy */}
       <View style={{
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
-        paddingTop: Platform.OS === 'android' ? 40 : 16,
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
       }}>

@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.database.connection import criar_tabelas
 from src.routes.v1.auth_routes import auth_router
 from src.routes.v1.consumo_routes import consumo_router
+from src.routes.v1.meta_routes import meta_router   # import no topo — falha ruidosamente se houver erro
 
 # Ciclo de vida da aplicação
 @asynccontextmanager
@@ -31,9 +32,7 @@ app.add_middleware(
 def health_check():
     return {"status": "API em Português no ar!"}
 
-from src.routes.v1.meta_routes import meta_router
-
-# Incluindo as rotas de autenticação, consumo e metas
+# Routers registrados após o app estar configurado
 app.include_router(auth_router)
 app.include_router(consumo_router)
 app.include_router(meta_router)

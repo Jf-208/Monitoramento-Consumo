@@ -64,13 +64,12 @@ export default function PrivacidadeScreen({ navigation }) {
   const { colors } = useContext(ThemeContext);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
       {/* Cabeçalho */}
       <View style={{
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
-        paddingTop: Platform.OS === 'android' ? 40 : 16,
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
       }}>
