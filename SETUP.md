@@ -1,48 +1,81 @@
-# SETUP - Como Iniciar o Projeto em Outro Computador
-
-Guia completo para configurar e rodar o projeto **Consumo** em qualquer computador.
-
----
+# Setup — Wavunder
 
 ## Pré-requisitos
 
-Certifique-se de que você tem instalado:
+| Ferramenta | Versão | Instalação |
+|-----------|--------|-----------|
+| Node.js | 18+ | nodejs.org |
+| Python | 3.11+ | python.org |
+| Expo Go | latest | App Store / Play Store |
+| EAS CLI (APK) | latest | `npm install -g eas-cli` |
 
-- **Python 3.10+** → [Download](https://www.python.org/downloads/)
-- **Node.js 18+** → [Download](https://nodejs.org/)
-- **Git** → [Download](https://git-scm.com/downloads)
-
-### Verificar instalações:
+## Backend
 
 ```bash
-python --version
-node --version
-npm --version
-git --version
+cd Backend_Api
+
+# Ambiente virtual
+python -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
+
+# Dependências
+pip install -r requirements.txt
+
+# Variáveis de ambiente
+cp .env.example .env
+# Preencher DATABASE_URL, EMAIL_REMETENTE, EMAIL_SENHA_APP
+
+# Criar banco e aplicar todas as migrations
+alembic upgrade head
+
+# (Opcional) Dados de demonstração
+python seed_demo.py
+
+# Servidor local
+uvicorn src.main:app --reload --port 8000
+# Docs: http://localhost:8000/docs
 ```
 
----
+## Frontend
 
-## Como rodar em outro computador
+```bash
+cd Consumo_react
+npm install
 
-### Backend
-1. Clone o repositório
-2. Entre na pasta `Backend_Api/`
-3. Crie o ambiente virtual: `python -m venv venv`
-4. Ative: Windows: `venv\Scripts\activate` | Mac/Linux: `source venv/bin/activate`
-5. Instale dependências: `pip install -r requirements.txt`
-6. Configure o `.env` com base no `.env.example` (DATABASE_URL, SECRET_KEY, etc.)
-7. Rode as migrations: `alembic upgrade head`
-8. Suba o servidor: `uvicorn src.main:app --reload`
+# Para usar backend local: em src/services/api.js → EM_PRODUCAO = false
+# Para usar Railway: EM_PRODUCAO = true (padrão de produção)
 
-### Frontend
-1. Entre na pasta `Consumo_react/`
-2. Instale dependências: `npm install`
-3. Em `src/services/api.js`, configure `EM_PRODUCAO = false` para desenvolvimento local
-4. Rode: `npx expo start`
-5. Para web: pressione `w` no terminal ou acesse `http://localhost:8081`
+npx expo start           # abre no browser ou Expo Go
+npx expo start --tunnel  # usa ngrok — funciona em qualquer rede
+```
 
-### Banco de dados (Supabase/Railway)
-- A string de conexão vai em `DATABASE_URL` no `.env`
-- Após subir o backend pela primeira vez, rode `alembic upgrade head` para criar as tabelas
-- O modelo `Consumo` tem CASCADE configurado: apagar usuário apaga todos os seus registros
+## Gerar APK Android
+
+```bash
+cd Consumo_react
+npm install -g eas-cli
+eas login
+eas build --platform android --profile preview
+# APK disponível em ~10-15 min no link gerado
+```
+
+## Troubleshooting
+
+| Problema | Causa | Solução |
+|---------|-------|---------|
+| Expo Go: navigation error | Falta import gesture-handler | 1ª linha do index.js: `import 'react-native-gesture-handler'` |
+| Backend 500 ao registrar | Migration não aplicada | Rodar `alembic upgrade head` ou verificar Procfile |
+| Home mostra 0L e 0kWh | EM_PRODUCAO errado ou Railway offline | Verificar api.js e status do Railway |
+| Porta em uso | Processo anterior não encerrado | `npx kill-port 8000 8081 19000` |
+
+## Variáveis de ambiente (.env)
+
+```env
+# Banco de dados
+DATABASE_URL=sqlite:///banco.sqlite             # local
+# DATABASE_URL=postgresql://user:pass@host/db   # Railway
+
+# E-mail para reset de senha (Gmail com senha de app)
+EMAIL_REMETENTE=seu@gmail.com
+EMAIL_SENHA_APP=xxxx xxxx xxxx xxxx
+```

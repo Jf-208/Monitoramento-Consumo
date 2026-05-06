@@ -54,6 +54,15 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // ─── FUNCAO: alterarSenha ──────────────────────────────────────────────────
+  /**
+   * Altera a senha do usuario autenticado no backend.
+   * Chamada pela tela ChangePassword apos validar campos localmente.
+   * Envia email + senha atual + nova senha para o endpoint PUT /auth/alterar-senha.
+   * @param {string} senhaAtual - Senha atual do usuario (verificada no servidor)
+   * @param {string} novaSenha  - Nova senha desejada
+   * @returns {{ success: boolean, message: string }}
+   */
   const alterarSenha = async (senhaAtual, novaSenha) => {
     try {
       const response = await api.put('/auth/alterar-senha', { 

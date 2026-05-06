@@ -194,8 +194,15 @@ export default function RegisterScreen() {
       return;
     }
     setSalvando(true);
+    // Determina o nome do registro:
+    // - tipo 'outro': usa o nome digitado pelo usuario
+    // - tipos pre-definidos (banho, pia, louca): usa o label do tipo selecionado
+    const nomeFinalAgua = tipoAgua === 'outro'
+      ? nomeAguaOutro.trim()
+      : TIPOS_AGUA.find(t => t.id === tipoAgua)?.label ?? 'Agua';
+
     const resultado = await salvarConsumoBackend('agua', litros, 'L', false, {
-      nome_custom: tipoAgua === 'outro' ? nomeAguaOutro.trim() : null,
+      nome_custom: nomeFinalAgua,
       data_personalizada: formatarDataISO(dataAgua),
     });
     if (resultado.success) {
@@ -227,8 +234,15 @@ export default function RegisterScreen() {
       return;
     }
     setSalvando(true);
+    // Determina o nome do aparelho:
+    // - aparelho 'custom': usa o nome digitado pelo usuario
+    // - aparelhos pre-definidos: usa o label do aparelho selecionado
+    const nomeFinalEnergia = aparelhoId === 'custom'
+      ? nomeEnergiaCustom.trim()
+      : APARELHOS.find(a => a.id === aparelhoId)?.label ?? 'Energia';
+
     const resultado = await salvarConsumoBackend('energia', kWh, 'kWh', false, {
-      nome_custom: aparelhoId === 'custom' ? nomeEnergiaCustom.trim() : null,
+      nome_custom: nomeFinalEnergia,
       data_personalizada: formatarDataISO(dataEnergia),
     });
     if (resultado.success) {

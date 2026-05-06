@@ -4,7 +4,7 @@
 // StatBars de consumo MENSAL do backend, card de Gasto Mensal,
 // e uma "Dica do Dia" que muda a cada 24h.
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, Image, ScrollView, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, Image, ScrollView, ActivityIndicator, Platform, TouchableOpacity } from 'react-native';
 import { MotiView } from 'moti';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -213,6 +213,32 @@ export default function HomeScreen({ navigation }) {
             </Text>
           </View>
         </MotiView>
+
+        {/* Botao de navegacao para a tela de Dicas completa */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Tips')}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingVertical: 10,
+            paddingHorizontal: 20,
+            marginTop: 8,
+            marginBottom: 24,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.surface,
+            gap: 8,
+          }}
+          activeOpacity={0.75}
+        >
+          <Ionicons name="bulb-outline" size={16} color={colors.teal || '#1D9E75'} />
+          <Text style={{ color: colors.teal || '#1D9E75', fontSize: 14, fontWeight: '600' }}>
+            Para mais dicas, clique aqui
+          </Text>
+          <Ionicons name="chevron-forward" size={14} color={colors.teal || '#1D9E75'} />
+        </TouchableOpacity>
         </>
       )}
     </ScrollView>
