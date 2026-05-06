@@ -39,10 +39,10 @@ def upgrade() -> None:
                                       server_default=sa.func.now(), nullable=True))
 
     # Preenche valores padrão nas linhas existentes (se houver)
-    op.execute("UPDATE meta SET ativa = true WHERE ativa IS NULL")
+    op.execute("UPDATE meta SET ativa = 1 WHERE ativa IS NULL")
     op.execute("UPDATE meta SET unidade_medida = 'L' WHERE unidade_medida IS NULL")
-    op.execute("UPDATE meta SET data_inicio = CURRENT_DATE WHERE data_inicio IS NULL")
-    op.execute("UPDATE meta SET data_fim    = CURRENT_DATE + interval '6 days' WHERE data_fim IS NULL")
+    op.execute("UPDATE meta SET data_inicio = date('now') WHERE data_inicio IS NULL")
+    op.execute("UPDATE meta SET data_fim    = date('now', '+6 days') WHERE data_fim IS NULL")
 
     # Agora torna não-nullable após preencher os valores
     with op.batch_alter_table('meta', schema=None) as batch_op:
