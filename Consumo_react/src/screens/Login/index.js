@@ -61,6 +61,7 @@ export default function LoginScreen({ navigation }) {
         default: {},
       }),
     },
+    title: { fontSize: '32@ms', fontWeight: '800', color: colors.text, marginBottom: '8@vs' },
     subtitle: {
       fontSize: '15@ms',
       color:    colors.textSub,
@@ -104,8 +105,8 @@ export default function LoginScreen({ navigation }) {
           resizeMode="contain"
         />
       </View>
-
-      <Text style={styles.subtitle}>Faça login para continuar</Text>
+      <Text style={[styles.title, { textAlign: 'center', marginBottom: 8 }]}>Login</Text>
+      <Text style={[styles.subtitle, { fontSize: 16 }]}>Preencha seus dados para entrar</Text>
 
       {/* Feedback in-app */}
       {mensagem && (
@@ -151,12 +152,12 @@ export default function LoginScreen({ navigation }) {
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={styles.link}
+        style={[styles.link, { marginTop: 20 }]}
         onPress={() => navigation.navigate('Register')}
       >
-        <Text style={styles.linkText}>
+        <Text style={[styles.linkText, { fontSize: 16 }]}>
           Não tem uma conta?{' '}
-          <Text style={styles.linkHighlight}>Cadastre-se</Text>
+          <Text style={[styles.linkHighlight, { fontSize: 16 }]}>Cadastre-se</Text>
         </Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
